@@ -1,0 +1,14 @@
+#numpy arrays
+*.npy
+
+#figures
+*.png
+*.jpg
+
+#MD data files
+
+#movies
+*.mp4
+
+#pycaches
+*.pyc
