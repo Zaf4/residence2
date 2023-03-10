@@ -19,7 +19,7 @@ def findResidences(arr:np.ndarray)->np.ndarray:
 
     Returns
     -------
-    rt : np.mndarray
+    rt : np.ndarray
         Residence Times.
 
     """
@@ -242,7 +242,7 @@ def generateDF(dumpfile:os.PathLike='./data/targetDUMP.npy',
     df = addClusterLifetimes(df, states, timestep=timestep,duration=300)
     #adding residence times (all atoms)
     df = addResidenceTimes(df, states,timestep=timestep)
-    #adding clustersizses
+    #adding cluster sizes
     df = addClusterSizes(df)
     #adding timesteps
     df = addTimestep(df, timestep=timestep)
@@ -264,7 +264,9 @@ def multiTimeDF(timesteps:np.ndarray,**kwargs)->pd.DataFrame:
     return df
 
 def makePlot(df:pd.DataFrame,*args,**kwargs)->plt.Axes:
-    
+    """
+    make single row of figures showing clusters and lifetimes
+    """
     
     # font = 1
     sns.set_theme(style='ticks',
@@ -321,8 +323,24 @@ def makePlot(df:pd.DataFrame,*args,**kwargs)->plt.Axes:
 
 
 def makePlotMulti(dfs:list,*args,**kwargs)->plt.Axes:
+    """
+    takes multiple DataFrames and make multiple rows 
+    of figures showing clusters and lifetimes
+
+    Parameters
+    ----------
+    dfs : list
+        list of dataframes
+
+    Returns
+    -------
+    plt.Axes
+        _description_
+    """
+
+
     
-    
+    #clear graph settings
     sns.set_theme(style='ticks',
         rc = {
               'font.weight':'light',
@@ -385,6 +403,7 @@ def makePlotMulti(dfs:list,*args,**kwargs)->plt.Axes:
 
 if __name__ == '__main__':
     """
+    #___________trial with small data on PC________________
     timesteps = np.random.random_integers(1500,4000,size=2)
     df = multiTimeDF(timesteps,
                      dumpfile='./data/targetDUMP.npy',
@@ -407,6 +426,7 @@ if __name__ == '__main__':
     plt.savefig('./graphs/multiLove.png', dpi=400)
     """
     """
+    #____________this part was run on the HPC_______________
     timesteps = np.random.random_integers(5000,22000,size=40)
     
     #for server
@@ -433,6 +453,8 @@ if __name__ == '__main__':
     ax = makePlotMulti([df280,df300,df350,df400])
     plt.savefig(f'{saveloc}/multi.png', dpi=400)
     """
+
+    #_______this part is done on PC to data obtained from Cluster_________
     df280 = pd.read_csv('./data/280.csv', index_col=False)
     df300 = pd.read_csv('./data/300.csv', index_col=False)
     df350 = pd.read_csv('./data/350.csv', index_col=False)

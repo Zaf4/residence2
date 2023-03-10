@@ -3,30 +3,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
-from rich.progress import track
 
 
-def Rplotify(func):
-    def modify_graph(df,fits,palette):
-        ax = func(df,fits,palette)
-        sns.set(style='ticks',
-            rc = {'figure.figsize':(5.6,4.2),
-                  'font.weight':'light',
-                  'font.family':'Arial',
-                  'axes.spines.top':'False',
-                  'axes.spines.right':'False',
-                  'ytick.minor.size':'0',
-                  'ytick.major.size':'10',
-                  'xtick.major.size':'10'
-                  
-                  }
-            )
-        return ax
-    return modify_graph
-
-
-@Rplotify
-def scatterit(df:pd.DataFrame,fits:pd.DataFrame,palette:str)->plt.Axes:
+def scatterit(df:pd.DataFrame,fits:pd.DataFrame,
+              palette:str,**kwargs)->plt.Axes:
     """
     
 
@@ -48,7 +28,7 @@ def scatterit(df:pd.DataFrame,fits:pd.DataFrame,palette:str)->plt.Axes:
     
     df.index = np.arange(len(df))+1
     fits.index = np.arange(len(df))+1
-    ax = plt.figure(figsize=(5.6,4.2))
+    
     font = {'family': 'Arial',
             'weight': 'light',
             'size': 14,
@@ -73,11 +53,12 @@ def scatterit(df:pd.DataFrame,fits:pd.DataFrame,palette:str)->plt.Axes:
     for i,col in enumerate(df):
         #scatterplot
         sns.scatterplot(data=df[col],s=50,
-                        edgecolor='black',linewidth=0.25)
+                        edgecolor='black',linewidth=0.25,palette=palette,
+                        **kwargs)
     for i,col in enumerate(fits):
         #lineplot
-        sns.lineplot(data=fits[col],
-                     linestyle='dashed',alpha=1)
+        sns.lineplot(data=fits[col],palette=palette,
+                     linestyle='dashed',alpha=1,**kwargs)
 
     plt.yscale('log')
     plt.xscale('log')
@@ -86,9 +67,9 @@ def scatterit(df:pd.DataFrame,fits:pd.DataFrame,palette:str)->plt.Axes:
     plt.xlabel('Duration (a.u.)',fontdict=font)
     plt.ylabel('Occurence',fontdict=font)
 
-    return ax
+    return 
 
-def generate_fit_graph(datafile:str,fitfile:str,keyword:str)->None:
+def generate_fit_graph(datafile:str,fitfile:str,keyword:str,**kwargs)->None:
     """
     
 
@@ -116,26 +97,23 @@ def generate_fit_graph(datafile:str,fitfile:str,keyword:str)->None:
     
     
     if '.' in keyword: #if for energy
-        ax = scatterit(partial_data,partial_fits,'mako_r')
-        plt.text(x=1,y=1,color='grey',
-                 s=f'Fit equation:{fname}\nEnergy:{keyword}kT')
+        ax = scatterit(partial_data,partial_fits,'mako_r',**kwargs)
+
         legend = [f'{x[-2:]}µM' for x in cols]
         keyword = ''.join(keyword.split('.'))
 
     else:
-        ax = scatterit(partial_data,partial_fits,'viridis_r')
-        plt.text(x=1,y=1,color='grey',
-                 s=f'Fit equation:{fname}\nConcentration:{keyword}µM')
+        ax = scatterit(partial_data,partial_fits,'viridis_r',**kwargs)
+
         legend = [f'{x[:4]}kT' for x in cols]
     
     plt.legend(legend)
     #creating folder(if not already there), saving the graph
     if not os.path.exists('./scatters'):
         os.mkdir('scatters')
-    
-    plt.savefig(f'./scatters/{fname}_{keyword}.png',dpi=400,
-                transparent=False,bbox_inches='tight')
-    plt.close()
+    # plt.savefig(f'./scatters/{fname}_{keyword}.png',dpi=400,
+    #           transparent=False,bbox_inches='tight')
+    #plt.close()
     return
                     
 
@@ -143,11 +121,43 @@ def generate_fit_graph(datafile:str,fitfile:str,keyword:str)->None:
 if __name__ == '__main__':
     data = './data/durations_minimized.csv'
     #names and functions are listed for the for loop
+
+    """
     eqnames = ['ED','DED','TED','QED','PED','Powerlaw']
     keywords = ['10','20','40','60','1.00','2.80','3.00','3.50','4.00']
+
+    """
+
+
+    eqnames = ['ED','DED','Powerlaw']
+    keywords = ['10','20','40','60']
+
+    nrow,ncol = len(eqnames),len(keywords)
+
+    fig,axes = plt.subplots(nrow,ncol,
+                            sharex=True,sharey=True,
+                            figsize=(nrow*6,ncol*4))
     
-    for eqname in eqnames:
-        for keyword in track(keywords):
+    for i,eqname in enumerate(eqnames):
+        for j,keyword in enumerate(keywords):
             generate_fit_graph(datafile='./data/durations_minimized.csv',
                                fitfile=f'./data/{eqname}.csv',
-                               keyword=keyword)
+                               keyword=keyword,
+                               ax = axes[i,j])
+
+    sns.set_palette('viridis')    
+    plt.setp(axes,
+             xlim=[0.72,3.7e3],
+             ylim=[0.5,1e6],
+             xscale='log',
+             yscale='log')
+    
+    plt.show()
+
+    """
+    plt.yscale('log')
+    plt.xscale('log')
+    plt.xlim()
+    plt.ylim([0.5,1e6])
+    plt.xlabel('Duration (a.u.)',fontdict=font)
+    plt.ylabel('Occurence',fontdict=font)"""
