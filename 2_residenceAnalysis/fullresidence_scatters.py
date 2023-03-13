@@ -26,7 +26,7 @@ def Rplotify(func):
 
 
 @Rplotify
-def scatterit(df:pd.DataFrame,fits:pd.DataFrame,palette:str)->plt.Axes:
+def scatterit(df:pd.DataFrame,fits:pd.DataFrame, palette:str,residuals:bool=True)->plt.Axes:
     """
     
 
@@ -70,14 +70,16 @@ def scatterit(df:pd.DataFrame,fits:pd.DataFrame,palette:str)->plt.Axes:
             )
      
     sns.set_palette(palette)
+
     for i,col in enumerate(df):
         #scatterplot
         sns.scatterplot(data=df[col],s=50,
                         edgecolor='black',linewidth=0.25)
     for i,col in enumerate(fits):
         #lineplot
-        sns.lineplot(data=fits[col],
+        sns.lineplot(data=fits[col], 
                      linestyle='dashed',alpha=1)
+
 
     plt.yscale('log')
     plt.xscale('log')
@@ -136,6 +138,9 @@ def generate_fit_graph(datafile:str,fitfile:str,keyword:str)->None:
     plt.savefig(f'./scatters/{fname}_{keyword}.png',dpi=400,
                 transparent=False,bbox_inches='tight')
     plt.close()
+
+
+
     return
                     
 

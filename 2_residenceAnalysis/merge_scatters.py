@@ -1,4 +1,5 @@
 from PIL import Image
+import os 
 
 def merge_graphs(rows:list,cols:list):
     nrow,ncol = len(rows),len(cols)
@@ -26,5 +27,11 @@ if __name__ == '__main__':
 
     multi_um = merge_graphs(eqnames,ums)
     multi_kt = merge_graphs(eqnames,kts)
-    multi_kt.show()
-    multi_um.show()
+
+    if not os.path.exists('./mergedImages'):
+        os.mkdir('mergedImages')
+
+    multi_um.save('./mergedImages/MultiUM.png')
+    multi_kt.save('./mergedImages/MultiKT.png')
+    #multi_kt.show()
+    #multi_um.show()
