@@ -8,7 +8,7 @@ import os
 def residuals2boxplot(residuals:pd.DataFrame,hue_by=None,
                       graphname:str='residuals',palette:str='flare'):
     #residues of equations
-    ax = plt.figure()
+    ax = plt.figure(figsize=(8,6))
     
     #upper and lower boundaries for the aesthetics
     upper = 10**np.ceil(np.log10(residuals.value.max())) #upper boundary of boxplot
@@ -18,10 +18,10 @@ def residuals2boxplot(residuals:pd.DataFrame,hue_by=None,
     #font and style setttings
     font = {'family': 'sans-serif',
             'weight': 'light',
-            'size': 14,
+            'size': 15,
             }
     sns.set(style='ticks',
-        rc = {'figure.figsize':(5.6,4.2),
+        rc = {
               'font.weight':'light',
               'font.family':'sans-serif',
               'axes.spines.top':'False',
@@ -46,20 +46,21 @@ def residuals2boxplot(residuals:pd.DataFrame,hue_by=None,
     
     #boxplot for the residual comparison
     sns.boxplot(residuals,y='value',hue = hue_by,x='variable',
-                        palette=palette, saturation=1,linewidth=0.7,
-                        showfliers=False,**props)
+                palette=palette, saturation=1,linewidth=0.7,
+                showfliers=False,**props)
     #labeling,modyifying and scaling then saving
-    plt.legend(title=None)
+    plt.legend(title=None,fontsize=15,loc='upper center')
     plt.xlabel(None)
-    plt.ylabel('(ΣResiduals²)/N(Values)',fontdict=font)
+    plt.ylabel('Normalized RSS',fontdict=font)
     plt.yscale('log')
     plt.ylim([lower,upper])
+    plt.tick_params(axis='both',labelsize=14)
     
     #creating folder(if not already there), saving the graph
     if not os.path.exists('./boxplots'):
         os.mkdir('boxplots')
-    plt.savefig(f'./boxplots/{graphname}_by_{hue_by}.png', dpi=400,
-                # transparent=True,
+    plt.savefig(f'./boxplots/{graphname}_by_{hue_by}.pdf',
+                transparent=True,
                 bbox_inches='tight')
     # plt.close()
     return

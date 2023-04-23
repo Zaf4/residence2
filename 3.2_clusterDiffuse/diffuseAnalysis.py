@@ -321,6 +321,15 @@ def makePlot(df:pd.DataFrame,*args,**kwargs)->plt.Axes:
     
     return ax
 
+def simplify(df:pd.DataFrame)->pd.DataFrame:
+    
+    df = df[['clusterID','residence','clusterSize','timestep','conformation','kT','tau']]
+    df = df.drop_duplicates(['clusterID','timestep'])
+    df = df[df.clusterID>0]
+    df = df[df.residence>0]
+    return df
+
+
 
 def makePlotMulti(dfs:list,*args,**kwargs)->plt.Axes:
     """
@@ -370,6 +379,8 @@ def makePlotMulti(dfs:list,*args,**kwargs)->plt.Axes:
         ax[row,0].annotate(xy=(0.05,0.1),
                        text=f't = {max_time} a.u',fontweight='bold',
                        xycoords='axes fraction')
+        ax[row,0].set_ylabel('y',fontsize=16)
+        ax[row,0].set_xlabel('x',fontsize=16)
         ax[row,0].set_xlim([-90,90])
         ax[row,0].set_ylim([-30,30])
         #adding color bar
@@ -378,10 +389,11 @@ def makePlotMulti(dfs:list,*args,**kwargs)->plt.Axes:
         purples.set_array([])
         ax[row,0].get_legend().remove()
         ax[row,0].figure.colorbar(purples,ax=ax[row,0],location='right',
-                              shrink=1,label='Mean Lifetime')
+                              shrink=1,)
         
     
         #regression  -----------------REGRESSION-----------------------------------
+        df = simplify(df)
         sns.regplot(df,x='clusterSize',y='tau',
                     ax=ax[row,1],color='red')
         #finding correlation coeff
@@ -392,8 +404,8 @@ def makePlotMulti(dfs:list,*args,**kwargs)->plt.Axes:
         ax[row,1].annotate(xy=(0.85,0.05),
                        text=f'N = {N}',fontweight='bold',
                        xycoords='axes fraction')
-        ax[row,1].set_ylabel('Mean Lifetime')
-        ax[row,1].set_xlabel('Cluster Size')
+        ax[row,1].set_ylabel('Mean Lifetime',fontsize=16)
+        ax[row,1].set_xlabel('Cluster Size',fontsize=16)
     
         fig.tight_layout()
         
@@ -461,6 +473,6 @@ if __name__ == '__main__':
     df400 = pd.read_csv('./data/400.csv', index_col=False)
     
     ax = makePlotMulti([df280,df300,df350,df400])
-    plt.savefig('./graphs/multi.png', dpi=400)
+    plt.savefig('./graphs/multi.pdf',transparent=True)
     
     
