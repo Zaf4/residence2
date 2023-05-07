@@ -82,7 +82,7 @@ def value_fit(val:np.ndarray,eq:callable)->tuple[np.ndarray,np.ndarray,tuple]:
     t,val = deleteNaN(val)
 
     
-    popt, pcov= curve_fit(eq, t, val, maxfev=20000000,sigma=1/t**4)
+    popt, pcov= curve_fit(eq, t, val, maxfev=20000000)
     residuals = (val- eq(t, *popt))
     ress_sumofsqr =np.sum(residuals**2)
     ss_res_norm = ress_sumofsqr/len(val)
@@ -150,31 +150,143 @@ def df_minimize(df:pd.DataFrame)->pd.DataFrame:
 
     return df
 
-df = pd.read_csv('duration_cont.csv',index_col=None)
-
-df = df_minimize(df)
-values = np.array(df.uniform_350)
 
 
-fits = pd.DataFrame()
+def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
+                    i:int, j:int, axes,
+                    palette: str, **kwargs) -> plt.Axes:
+    """
 
 
-for eqx in [double_exp,powerlaw,st_exp]:
-    fits[eqx.__name__],_,_ = value_fit(values,eq=eqx)
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Main data.
+    fits : pd.DataFrame
+        Equation fit of the main data.
+    color: list
+        Colors range.
 
-df.index = np.arange(len(df))+1
-fits.index+=1
-#sns.scatterplot(df,x=df.index,y='gaus_350',palette='magma_r')
-ax = plt.figure(figsize=(5.6,4.2))
-sns.set_palette('viridis')
-sns.scatterplot(df)
-"""
-sns.scatterplot(df,x=df.index,y='uniform_350')
-sns.scatterplot(df,x=df.index,y='gaus_350')
-sns.scatterplot(df,x=df.index,y='3.50_60')"""
-#sns.lineplot(fits,palette='Purples_r')
+    Returns
+    -------
+    ax : plot
+        seaborn scatter graph.
 
-plt.xscale('log')
-plt.yscale('log')
-#plt.show()
-plt.savefig('image.png',dpi=400)
+    """
+    
+    
+    ax = axes[i,j]
+
+    # resetting indexes
+    df.index = np.arange(len(df))+1
+    fits.index = np.arange(len(df))+1
+
+    # seting seaborn parameters
+    font = {'family': 'Arial',
+            'weight': 'light',
+            'size': 14,
+            }
+
+    sns.set(style='ticks',
+            palette=palette,
+            rc={
+                'font.weight': 'light',
+                'font.family': 'sans-serif',
+                'axes.spines.top': 'False',
+                'axes.spines.right': 'False',
+                'ytick.minor.size': '0',
+                'xtick.minor.size': '0',
+                'ytick.major.size': '10',
+                'xtick.major.size': '10',
+                'legend.frameon': False
+
+                }
+            )
+
+    sns.set_palette(palette)
+    for i, col in enumerate(df):
+        # scatterplot
+        sns.scatterplot(data=df[col], s=40,
+                        # edgecolor=None,
+                        alpha=0.4,
+                        edgecolor='white', 
+                        linewidth=0.01,
+                        ax=ax,
+                        **kwargs)
+    for i, col in enumerate(fits):
+        # lineplot
+        sns.lineplot(data=fits[col],
+                     ax=ax, linewidth=3,
+                     # color='#1f1f1f',
+                     linestyle='dashed', alpha=1, **kwargs)
+
+    ax.tick_params(axis='both',labelsize=12)
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_xlim([0.72, 3.7e3])
+    ax.set_ylim([0.5, 1e6])
+    
+    
+    ax.set_xlabel(None)
+    ax.set_ylabel(None)
+    # ax.set_xlabel('Duration (a.u.)', fontdict=font)
+    # ax.set_ylabel('Occurence', fontdict=font)
+
+    return
+
+
+if __name__ == '__main__':
+    
+    #values dataframe
+    df = pd.read_csv('duration_cont.csv',index_col=None)
+    df = df_minimize(df)
+
+    #multi plot
+    nrow = 1
+    ncol = 2
+    fig, axes = plt.subplots(nrow, ncol, figsize=(ncol*8, nrow*6))    
+    
+
+    #fits dataframe eq + val
+    for i,eqx in enumerate([double_exp,powerlaw]):
+        fits = pd.DataFrame()
+        part = pd.DataFrame()
+        col_names = []
+        for col in df:
+            fits[col],_,_ = value_fit(np.array(df[col]),eq=eqx)
+            part[col] = df[col]
+            col_names.append(col)
+        
+        ax = axes[i]
+        fits['timepoint'] = np.arange(1,len(df)+1)
+        part['timepoint'] = np.arange(1,len(df)+1)
+        
+        #melting fits
+        fits = pd.melt(fits,
+                       value_vars=col_names,
+                       id_vars = ['timepoint'],
+                       var_name = 'x',
+                       value_name='values')
+        #melting data
+        part = pd.melt(part,
+                       value_vars=col_names,
+                       id_vars = ['timepoint'],
+                       var_name = 'x',
+                       value_name='values')
+        #plotting
+        sns.lineplot(data=fits,x='timepoint',y='values',
+                     ax=axes[i],palette='viridis',hue='x')
+        sns.scatterplot(data=part,x='timepoint',y='values',
+                        ax=axes[i],palette='viridis',hue='x')
+        
+        ax.set_yscale('log')
+        ax.set_xscale('log')
+        ax.set_xlim([0.72, 3.7e3])
+        ax.set_ylim([0.5, 1e7])
+        
+        
+        ax.set_xlabel(None)
+        ax.set_ylabel(None)
+    
+
+

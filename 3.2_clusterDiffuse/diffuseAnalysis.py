@@ -2,11 +2,14 @@ import numpy as np
 import pandas as pd
 import clusterAnalysisExtra as clust
 import os
-from scipy.optimize import curve_fit
+import platform
 import seaborn as sns
 import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
 from scipy import stats
+from scipy.spatial import ConvexHull
 from rich.progress import track
+
 
 def findResidences(arr:np.ndarray)->np.ndarray:
     """
@@ -217,6 +220,43 @@ def addKT(df:pd.DataFrame,kT:float)->pd.DataFrame:
     df['kT'] = kts
     
     return df
+
+def addSurface(df:pd.DataFrame)->pd.DataFrame:
+    num_clust = df.clusterID.max()
+    
+    #initing surface array
+    surface = np.zeros(len(df))#0 for the free atoms
+    # timesteps =np.sort(df.timestep.unique())
+    
+    for i in np.arange(num_clust)+1:
+        partial = df[df.clusterID==i]
+        atomIDs = np.array(partial.atomID)#storing indexes before removing binding domains
+        #marking core atoms
+        surface[atomIDs-1] = 2 #2 for the core atoms
+        
+        #removing non type-5 (hinge domain) particles
+        partial = partial[partial.type==5]
+        coor = np.array(partial[['x','y','z']])
+        
+        #resetting atomIDs after taking subset of df
+        atomIDs = np.array(partial.atomID)
+        
+        #using convexHull algorithm finding surface atoms
+        hull = ConvexHull(coor, qhull_options='QJ Tv 1e-12', incremental = True)
+        surf_ids = atomIDs[np.array(hull.vertices)]-1
+        
+        #marking surface tfs
+        ##hinge domain
+        surface[surf_ids]=1 #1 for surface
+        ##binding domains
+        surface[surf_ids-1]=1
+        surface[surf_ids+1]=1
+        
+        
+    df['kind'] = surface
+    
+    return df
+        
     
     
 def generateDF(dumpfile:os.PathLike='./data/targetDUMP.npy',
@@ -250,6 +290,8 @@ def generateDF(dumpfile:os.PathLike='./data/targetDUMP.npy',
     df = addClusterShape(df)
     #add kTs (energies)
     df = addKT(df, kT)
+    #add kind (surface,core,free)
+    df = addSurface(df)
     
     return df
 
@@ -331,7 +373,7 @@ def simplify(df:pd.DataFrame)->pd.DataFrame:
 
 
 
-def makePlotMulti(dfs:list,*args,**kwargs)->plt.Axes:
+def makePlotMulti_tau(dfs:list,*args,**kwargs)->plt.Axes:
     """
     takes multiple DataFrames and make multiple rows 
     of figures showing clusters and lifetimes
@@ -367,17 +409,17 @@ def makePlotMulti(dfs:list,*args,**kwargs)->plt.Axes:
                           gridspec_kw={'width_ratios': [2.5, 1]})
     
     for row,df in enumerate(dfs):
-    
         df = df[df.clusterID>0]
-        max_time = df.timestep.min()
+        time = np.random.choice(df.timestep.unique())
         N = len(np.unique(df.timestep))
     
         #showing the system -------------SCATTER-----------------------------------
-        sns.scatterplot(df[df.timestep==max_time],x='x',y='y',
+        sns.scatterplot(data = df[df.timestep==time],
+                        x='x',y='y',
                         hue='tau',palette='Purples',
                         edgecolor='k',ax=ax[row,0])
         ax[row,0].annotate(xy=(0.05,0.1),
-                       text=f't = {max_time} a.u',fontweight='bold',
+                       text=f't = {time} a.u',fontweight='bold',
                        xycoords='axes fraction')
         ax[row,0].set_ylabel('y',fontsize=16)
         ax[row,0].set_xlabel('x',fontsize=16)
@@ -393,8 +435,8 @@ def makePlotMulti(dfs:list,*args,**kwargs)->plt.Axes:
         
     
         #regression  -----------------REGRESSION-----------------------------------
-        df = simplify(df)
-        sns.regplot(df,x='clusterSize',y='tau',
+        dfs = simplify(df)
+        sns.regplot(data =  dfs,x='clusterSize',y='tau',
                     ax=ax[row,1],color='red')
         #finding correlation coeff
         r,p = stats.pearsonr(df['clusterSize'],y=df['tau'])
@@ -411,6 +453,85 @@ def makePlotMulti(dfs:list,*args,**kwargs)->plt.Axes:
         
     return ax
 
+def makePlotMulti_surface(dfs:list,*args,**kwargs)->plt.Axes:
+    """
+    takes multiple DataFrames and make multiple rows 
+    of figures showing clusters and lifetimes
+
+    Parameters
+    ----------
+    dfs : list
+        list of dataframes
+
+    Returns
+    -------
+    plt.Axes
+        _description_
+    """
+
+
+    
+    #clear graph settings
+    sns.set_theme(style='ticks',
+        rc = {
+              'font.weight':'light',
+              'font.size':14,
+              'font.family':'Arial',
+              'ytick.minor.size':'0',
+              'ytick.major.size':'10',
+              'xtick.major.size':'10'
+              
+              }
+        )
+    
+    num_rows = len(dfs)
+    fig,ax = plt.subplots(num_rows,2,figsize=(16,4.5*num_rows),
+                          gridspec_kw={'width_ratios': [2.5, 1]})
+    
+    for row,df in enumerate(dfs):
+        df = df[df.clusterID>0]
+        time = np.random.choice(df.timestep.unique())
+        N = len(np.unique(df.timestep))
+    
+        #showing the system -------------SCATTER-----------------------------------
+        sns.scatterplot(data = df[(df.timestep==time)&(df.type == 5)],
+                        x='x',y='y',size='z',
+                        hue='residence',palette='Purples',
+                        edgecolor='k',ax=ax[row,0])
+        ax[row,0].annotate(xy=(0.05,0.1),
+                       text=f't = {time} a.u',fontweight='bold',
+                       xycoords='axes fraction')
+        ax[row,0].set_ylabel('y',fontsize=16)
+        ax[row,0].set_xlabel('x',fontsize=16)
+        ax[row,0].set_xlim([-90,90])
+        ax[row,0].set_ylim([-30,30])
+        #adding color bar
+        norm = plt.Normalize(df.tau.min(), df.tau.max())
+        purples = plt.cm.ScalarMappable(cmap="Purples",norm=norm)
+        purples.set_array([])
+        ax[row,0].get_legend().remove()
+        ax[row,0].figure.colorbar(purples,ax=ax[row,0],location='right',
+                              shrink=1,)
+        
+    
+        #regression  -----------------REGRESSION-----------------------------------
+        dfs = simplify(df)
+        sns.regplot(data =  dfs,x='clusterSize',y='tau',
+                    ax=ax[row,1],color='red')
+        #finding correlation coeff
+        r,p = stats.pearsonr(df['clusterSize'],y=df['tau'])
+        ax[row,1].annotate(xy=(0.05,0.90),
+                       text=f'r = {r:.2f}',fontweight='bold',
+                       xycoords='axes fraction')
+        ax[row,1].annotate(xy=(0.85,0.05),
+                       text=f'N = {N}',fontweight='bold',
+                       xycoords='axes fraction')
+        ax[row,1].set_ylabel('Mean Lifetime',fontsize=16)
+        ax[row,1].set_xlabel('Cluster Size',fontsize=16)
+    
+        fig.tight_layout()
+        
+    return ax
 
 
 if __name__ == '__main__':
@@ -437,42 +558,49 @@ if __name__ == '__main__':
     ax = makePlotMulti([df,df2,df3])
     plt.savefig('./graphs/multiLove.png', dpi=400)
     """
-    """
-    #____________this part was run on the HPC_______________
-    timesteps = np.random.random_integers(5000,22000,size=40)
     
-    #for server
-    flocs = '/home/gottar/5x10t/kt/60'
-    saveloc = '/home/gottar/5x10t/graphs'
-    kts = ['2.80','3.00','3.50','4.00']
+    if 'celestia' in platform.node():#run this part only if pc name includes celestia
+        
+        #____________this part was run on the HPC_______________
+        timesteps = np.random.random_integers(5000,22000,size=12)
+        
+        #for server
+        flocs = '/home/gottar/5x10t/kt/60'
+        saveloc = '/home/gottar/5x10t/graphs'
+        kts = ['2.80','3.00','3.50','4.00']
+        
+        #file list
+        dumpfiles = [flocs.replace('kt',kt)+'/dump.npy' for kt in kts]
+        statesfiles = [flocs.replace('kt',kt)+'/full.npy' for kt in kts]
+        
+        #generating dfs
+        df280 = multiTimeDF(timesteps,dumpfile=dumpfiles[0],statesfile=statesfiles[0],kT=float(kts[0]))
+        df300 = multiTimeDF(timesteps,dumpfile=dumpfiles[1],statesfile=statesfiles[1],kT=float(kts[1]))
+        df350 = multiTimeDF(timesteps,dumpfile=dumpfiles[2],statesfile=statesfiles[2],kT=float(kts[2]))
+        df400 = multiTimeDF(timesteps,dumpfile=dumpfiles[3],statesfile=statesfiles[3],kT=float(kts[3]))
+        #save dfs for further uses
+        df280.to_csv(f'{saveloc}/280.csv',index=False)
+        df300.to_csv(f'{saveloc}/300.csv',index=False)
+        df350.to_csv(f'{saveloc}/350.csv',index=False)
+        df400.to_csv(f'{saveloc}/400.csv',index=False)
+        
+        # #plotting and saving the plot
+        # ax = makePlotMulti([df280,df300,df350,df400])
+        # plt.savefig(f'{saveloc}/multi.png', dpi=400)
     
-    #file list
-    dumpfiles = [flocs.replace('kt',kt)+'/dump.npy' for kt in kts]
-    statesfiles = [flocs.replace('kt',kt)+'/full.npy' for kt in kts]
-    
-    #generating dfs
-    df280 = multiTimeDF(timesteps,dumpfile=dumpfiles[0],statesfile=statesfiles[0],kT=float(kts[0]))
-    df300 = multiTimeDF(timesteps,dumpfile=dumpfiles[1],statesfile=statesfiles[1],kT=float(kts[1]))
-    df350 = multiTimeDF(timesteps,dumpfile=dumpfiles[2],statesfile=statesfiles[2],kT=float(kts[2]))
-    df400 = multiTimeDF(timesteps,dumpfile=dumpfiles[3],statesfile=statesfiles[3],kT=float(kts[3]))
-    #save dfs for further uses
-    df280.to_csv(f'{saveloc}/280.csv',index=False)
-    df300.to_csv(f'{saveloc}/300.csv',index=False)
-    df350.to_csv(f'{saveloc}/350.csv',index=False)
-    df400.to_csv(f'{saveloc}/400.csv',index=False)
-    
-    #plotting and saving the plot
-    ax = makePlotMulti([df280,df300,df350,df400])
-    plt.savefig(f'{saveloc}/multi.png', dpi=400)
-    """
+    else:
+        #_______this part is done on PC to data obtained from Cluster_________
+        df280 = pd.read_csv('./data/12timepoint/280.csv', index_col=False)
+        df300 = pd.read_csv('./data/12timepoint/300.csv', index_col=False)
+        df350 = pd.read_csv('./data/12timepoint/350.csv', index_col=False)
+        df400 = pd.read_csv('./data/12timepoint/400.csv', index_col=False)
+        
+        dfs = [df280,df300,df350,df400]
+        
+        ax = makePlotMulti_tau(dfs)
+        plt.savefig('./graphs/multi_tau.pdf',transparent=True)
+        # ax1 = makePlotMulti_surface(dfs)
+        # plt.savefig('./graphs/multi_surface.pdf',transparent=True)
 
-    #_______this part is done on PC to data obtained from Cluster_________
-    df280 = pd.read_csv('./data/280.csv', index_col=False)
-    df300 = pd.read_csv('./data/300.csv', index_col=False)
-    df350 = pd.read_csv('./data/350.csv', index_col=False)
-    df400 = pd.read_csv('./data/400.csv', index_col=False)
-    
-    ax = makePlotMulti([df280,df300,df350,df400])
-    plt.savefig('./graphs/multi.pdf',transparent=True)
-    
-    
+        
+        

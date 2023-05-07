@@ -17,8 +17,6 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
         Main data.
     fits : pd.DataFrame
         Equation fit of the main data.
-    color: list
-        Colors range.
 
     Returns
     -------
@@ -27,21 +25,41 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
 
     """
     
+    #preprocess raw data and fits for graph------------------------------------
+    cols = [col for col in df]
+    df['timestep'] = np.arange(len(df))+1
+    fits['timestep'] = np.arange(len(df))+1
+    
+    fits = pd.melt(fits,
+                   id_vars=['timestep'],
+                   value_vars=cols,
+                   var_name='case',
+                   value_name='value')
+    
+    df = pd.melt(df,
+                 id_vars=['timestep'],
+                 value_vars=cols,
+                 var_name='case',
+                 value_name='value')
     
     ax = axes[i,j]
+    
+    if i==0 and j == 0:
+        legend = True
+    else:
+        legend = False
 
     # resetting indexes
     df.index = np.arange(len(df))+1
     fits.index = np.arange(len(df))+1
 
     # seting seaborn parameters
-    font = {'family': 'Arial',
+    font = {'family': 'Sans Serif',
             'weight': 'light',
             'size': 14,
             }
 
     sns.set(style='ticks',
-            palette=palette,
             rc={
                 'font.weight': 'light',
                 'font.family': 'sans-serif',
@@ -55,31 +73,44 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
 
                 }
             )
+    
+    #weight calculation to prevent overcrowding
+    ts = np.array(df.timestep)
+    weights = ((1/(ts*ts[::-1]))*10**5)**2
+    print(weights[::12000])
+    
+    #scattter plot (Data)------------------------------------------------------
+    sns.scatterplot(data=df.sample(frac=0.1,random_state=42,weights=weights),
+                    x='timestep',
+                    y='value',
+                    palette=palette,
+                    hue='case',
+                    alpha=1,
+                    s=40,
+                    edgecolor=None, 
+                    linewidth=0.01,
+                    ax=ax,
+                    legend=legend,
+                    **kwargs)
+    #Line plot (Fits)----------------------------------------------------------
+    """sns.lineplot(data=fits,
+                 x='timestep',
+                 y='value',
+                 palette=palette,
+                 hue='case',
+                 ax=ax,
+                 linewidth=3,
+                 linestyle='dashed',
+                 alpha=1, 
+                 **kwargs)"""
 
-    sns.set_palette(palette)
-    for i, col in enumerate(df):
-        # scatterplot
-        sns.scatterplot(data=df[col], s=40,
-                        # edgecolor=None,
-                        alpha=0.4,
-                        edgecolor='white', 
-                        linewidth=0.01,
-                        ax=ax,
-                        **kwargs)
-    for i, col in enumerate(fits):
-        # lineplot
-        sns.lineplot(data=fits[col],
-                     ax=ax, linewidth=3,
-                     # color='#1f1f1f',
-                     linestyle='dashed', alpha=1, **kwargs)
-
+    #graph settings------------------------------------------------------------    
     ax.tick_params(axis='both',labelsize=12)
+    ax.legend()
     ax.set_yscale('log')
     ax.set_xscale('log')
     ax.set_xlim([0.72, 3.7e3])
     ax.set_ylim([0.5, 1e6])
-    
-    
     ax.set_xlabel(None)
     ax.set_ylabel(None)
     # ax.set_xlabel('Duration (a.u.)', fontdict=font)
@@ -132,8 +163,8 @@ def generate_fit_graph(datafile:str = './data/durations_minimized.csv',
             partial_fits = fits[cols]
 
             if '.' in keyword:  # if for energy
-                scatterit_multi(partial_data, 
-                                partial_fits, 
+                scatterit_multi(partial_data,
+                                partial_fits,
                                 axes=axes,
                                 palette='mako_r')
                 # plt.text(x=1,y=1,color='grey',
@@ -157,7 +188,7 @@ def generate_fit_graph(datafile:str = './data/durations_minimized.csv',
                 os.mkdir('scatters')
                 
     fig.legend(legend,loc=(0.15,0.92),fontsize=15,markerscale=1.4,
-               labelspacing=0.25)        
+               labelspacing=0.25)   
     plt.tight_layout()
     plt.savefig('./scatters/multi_scatter_kT.pdf',
                 transparent=True, bbox_inches='tight')
