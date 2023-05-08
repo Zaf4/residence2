@@ -17,12 +17,12 @@ def residuals2boxplot(residuals:pd.DataFrame,hue_by=None,
     
     #font and style setttings
     font = {'family': 'sans-serif',
-            'weight': 'light',
-            'size': 15,
+            'weight': 'bold',
+            'size': 18,
             }
     sns.set(style='ticks',
         rc = {
-              'font.weight':'light',
+              #'font.weight':'light',
               'font.family':'sans-serif',
               'axes.spines.top':'False',
               'axes.spines.right':'False',
@@ -46,15 +46,15 @@ def residuals2boxplot(residuals:pd.DataFrame,hue_by=None,
     
     #boxplot for the residual comparison
     sns.boxplot(residuals,y='value',hue = hue_by,x='variable',
-                palette=palette, saturation=1,linewidth=0.7,
+                palette=palette, saturation=1,linewidth=1,
                 showfliers=False,**props)
     #labeling,modyifying and scaling then saving
-    plt.legend(title=None,fontsize=15,loc='upper center')
+    plt.legend(title=None,fontsize=18,loc='upper center')
     plt.xlabel(None)
     plt.ylabel('Normalized RSS',fontdict=font)
     plt.yscale('log')
     plt.ylim([lower,upper])
-    plt.tick_params(axis='both',labelsize=14)
+    plt.tick_params(axis='both',labelsize=18)
     
     #creating folder(if not already there), saving the graph
     if not os.path.exists('./boxplots'):
