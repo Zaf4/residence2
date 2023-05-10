@@ -88,8 +88,6 @@ for i,df in enumerate(dfs):
     stat2,pvalue2 = stats.ttest_ind(df[df.kind==1], df[df.kind==2])
     stat3,pvalue3 = stats.ttest_ind(df[df.kind==0], df[df.kind==2])
     
-    text_format = '{0}\n(p={1:.3f})'
-    
     #adding significance annotations -test: Welch's t-test---------------------
     statannot.add_stat_annotation(axes[0,i],
                                   data=df,

@@ -172,7 +172,7 @@ def generate_fit_graph(datafile:str = './data/durations_minimized.csv',
                                 palette='mako_r')
 
                 legend = [f'{x[-2:]}µM' for x in cols]
-
+                figname = 'SI-fig1'
 
             else:
                 scatterit_multi(partial_data, 
@@ -180,18 +180,19 @@ def generate_fit_graph(datafile:str = './data/durations_minimized.csv',
                                 axes=axes,
                                 palette='viridis_r',
                                 i=i, j=j)
-
+                
                 legend = [f'{x[:4]}kT' for x in cols]
+                figname = 'fig2'
 
             # plt.legend(legend)
             # creating folder(if not already there), saving the graph
-            if not os.path.exists('./scatters'):
-                os.mkdir('scatters')
+            if not os.path.exists('./graphs'):
+                os.mkdir('graphs')
                 
     fig.legend(legend,loc=(0.15,0.92),fontsize=15,markerscale=1.4,
                labelspacing=0.25,edgecolor='k')   
     plt.tight_layout()
-    plt.savefig('./scatters/multi_scatter_kT.pdf',
+    plt.savefig('./graphs/{figname}.pdf',
                 transparent=True, bbox_inches='tight')
    
     return fig

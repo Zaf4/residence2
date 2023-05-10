@@ -215,25 +215,8 @@ def data2df(file:os.PathLike)->pd.DataFrame:
 def _modify_scatter(func):
     def modifier(*args,**kwargs):
 
-        sns.set(style='white',
-            rc = {
-                  'font.weight':'light',
-                  'font.family':'sans-serif',
-                  'axes.spines.top':'False',
-                  'axes.spines.right':'False',
-                  'axes.spines.bottom':'False',
-                  'axes.spines.left':'False',
-                  'ytick.minor.size':'0',
-                  'ytick.major.size':'0',
-                  'xtick.major.size':'0',
-                  'legend.frameon':False,
-                  
-                  }
-            )
-        
         ax = func(*args,**kwargs)
         
-            
         ax.set(xticklabels=[],yticklabels=[])
         ax.legend([])
         ax.set_xlabel(None)
@@ -267,10 +250,10 @@ def system_scatter(coor:pd.DataFrame,axes,row,col,**kwargs):
     #selecting ax
     ax = axes[row,col]
     #graphing
-    sns.scatterplot(data=coor,**kwargs,size='radius',sizes=(2, 10),
-                    palette='Blues',edgecolor='k',linewidth=0.12,ax=ax)
+    sns.scatterplot(data=coor,**kwargs,size='radius',
+                    palette='Blues',edgecolor='k',linewidth=0.3,ax=ax)
     sns.scatterplot(data=capsid,**kwargs,palette='mako',
-                    edgecolor='k',linewidth=0.15,ax=ax)
+                    edgecolor='k',linewidth=0.4,ax=ax)
     
     # ax.annotate(x=-90,y=27,text=f'Rg={Rg(coor):.1f}',fontdict=font)
     
@@ -291,9 +274,9 @@ def protein_scatter(coor:pd.DataFrame,axes,row,col,**kwargs):
     #graphing
     
     sns.scatterplot(data=coor,**kwargs,size='radius', palette = 'Paired',
-                         edgecolor='k',linewidth=0.12,ax=ax)
+                         edgecolor='k',linewidth=0.3,ax=ax)
     sns.scatterplot(data=capsid,**kwargs,palette='mako',
-                         edgecolor='k',linewidth=0.15,ax=ax)
+                         edgecolor='k',linewidth=0.4,ax=ax)
 
     
     return ax
@@ -315,9 +298,9 @@ def cluster_scatter(coor:pd.DataFrame,axes,row,col,**kwargs):
     #graphing
     sns.scatterplot(data=tfs[tfs.clusterID>0],**kwargs,size='radius', 
                     palette = 'viridis',hue='clusterID',
-                    edgecolor='k',linewidth=0.12,ax=ax)
+                    edgecolor='k',linewidth=0.3,ax=ax)
     sns.scatterplot(data=capsid,**kwargs,palette='mako',
-                    edgecolor='k',linewidth=0.15,hue='type',ax=ax)
+                    edgecolor='k',linewidth=0.4,hue='type',ax=ax)
     ax.set_axis_off()
     
     return ax
@@ -350,7 +333,22 @@ def addRadius2df(df:pd.DataFrame)->pd.DataFrame:
 def createFigures(cases = [100,280,300,350,400]):
     
     nrow = len(cases)
-    fig, axes = plt.subplots(nrows=nrow,ncols=3,figsize=(3*5,nrow*2))
+    sns.set(style='white',
+            rc = {
+                    'font.weight':'light',
+                    'font.family':'sans-serif',
+                    'axes.spines.top':'False',
+                    'axes.spines.right':'False',
+                    'axes.spines.bottom':'False',
+                    'axes.spines.left':'False',
+                    'ytick.minor.size':'0',
+                    'ytick.major.size':'0',
+                    'xtick.major.size':'0',
+                    'legend.frameon':False,
+                    
+                    }
+            )
+    fig, axes = plt.subplots(nrows=nrow,ncols=3,figsize=(3*10,nrow*4))
     
     
     for i,case in enumerate(cases):
@@ -375,7 +373,7 @@ def createFigures(cases = [100,280,300,350,400]):
 if __name__ == '__main__':
     fig = createFigures()
     plt.tight_layout()
-    plt.savefig('./figures/Systems_multi.pdf',dpi=200,
+    plt.savefig('../Figures/fig3.png',
                 transparent=True, bbox_inches='tight')
 
 

@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import clusterAnalysisExtra as clust
+import cluster_analysis_extra as clust
 import os
 import platform
 import seaborn as sns
@@ -389,14 +389,15 @@ def makePlotMulti_tau(dfs:list,*args,**kwargs)->plt.Axes:
         _description_
     """
 
-
+    #loading capsid df
+    capsid = pd.read_csv('./data/capsid2d.csv',index_col=None)
     
     #clear graph settings
     sns.set_theme(style='ticks',
         rc = {
               'font.weight':'light',
-              'font.size':14,
-              'font.family':'Arial',
+              'font.size':18,
+              'font.family':'sans-serif',
               'ytick.minor.size':'0',
               'ytick.major.size':'10',
               'xtick.major.size':'10'
@@ -412,125 +413,75 @@ def makePlotMulti_tau(dfs:list,*args,**kwargs)->plt.Axes:
         df = df[df.clusterID>0]
         time = np.random.choice(df.timestep.unique())
         N = len(np.unique(df.timestep))
-    
-        #showing the system -------------SCATTER-----------------------------------
+        #plotting the -----------------CAPSID------------------
+        sns.scatterplot(data=capsid,color='#900C3F',
+                        ax=ax[row,0],x='x',y='y',
+                        edgecolor='#900C3F',size=20)
+
+        #plotting the system -------------SCATTER-----------------------------------
         sns.scatterplot(data = df[df.timestep==time],
                         x='x',y='y',
-                        hue='tau',palette='Purples',
-                        edgecolor='k',ax=ax[row,0])
-        ax[row,0].annotate(xy=(0.05,0.1),
-                       text=f't = {time} a.u',fontweight='bold',
-                       xycoords='axes fraction')
-        ax[row,0].set_ylabel('y',fontsize=16)
-        ax[row,0].set_xlabel('x',fontsize=16)
-        ax[row,0].set_xlim([-90,90])
-        ax[row,0].set_ylim([-30,30])
-        #adding color bar
+                        hue='tau',
+                        palette='Purples',
+                        edgecolor='k',
+                        ax=ax[row,0],
+                        linewidth=0.001)
+        ax[row,0].annotate(xy=(0.12,0.06), fontsize =16, 
+                           text=f'Timestep = {time}',
+                           fontweight='bold', style = 'italic',
+                           xycoords='axes fraction')
+        ax[row,0].set_ylabel('')
+        ax[row,0].set_xlabel('')
+        ax[row,0].set_xlim([-92,92])
+        ax[row,0].set_ylim([-31,31])
+        ax[row,0].set_xticks([])
+        ax[row,0].set_yticks([])
+        #adding color bar-----------------------------------------------------------
         norm = plt.Normalize(df.tau.min(), df.tau.max())
         purples = plt.cm.ScalarMappable(cmap="Purples",norm=norm)
         purples.set_array([])
         ax[row,0].get_legend().remove()
-        ax[row,0].figure.colorbar(purples,ax=ax[row,0],location='right',
-                              shrink=1,)
+        ax[row,0].figure.colorbar(purples,
+                                  ax=ax[row,0],
+                                  location='left',
+                                  shrink=1,
+                                  extend='both',
+                                  pad = 0.01,
+                                  label='Mean Lifetime (τ)'
+                                  )
+        sns.despine(ax= ax[row,0],left=True,bottom=True)
         
     
         #regression  -----------------REGRESSION-----------------------------------
-        dfs = simplify(df)
-        sns.regplot(data =  dfs,x='clusterSize',y='tau',
+        df_simple = simplify(df)
+        sns.regplot(data = df_simple,x='clusterSize',y='tau',
                     ax=ax[row,1],color='red')
         #finding correlation coeff
-        r,p = stats.pearsonr(df['clusterSize'],y=df['tau'])
+        r,p = stats.pearsonr(df_simple['clusterSize'],y=df_simple['tau'])
+        
+        #showing pearson r
         ax[row,1].annotate(xy=(0.05,0.90),
-                       text=f'r = {r:.2f}',fontweight='bold',
-                       xycoords='axes fraction')
-        ax[row,1].annotate(xy=(0.85,0.05),
-                       text=f'N = {N}',fontweight='bold',
-                       xycoords='axes fraction')
-        ax[row,1].set_ylabel('Mean Lifetime',fontsize=16)
-        ax[row,1].set_xlabel('Cluster Size',fontsize=16)
-    
+                           text=f'r = {r:.2f}',
+                           fontweight='bold',
+                           style='italic',
+                           xycoords='axes fraction')
+        
+        #showing number of timepoints
+        ax[row,1].annotate(xy=(0.80,0.05),
+                           text=f'N = {N}',
+                           fontweight='bold',
+                           style='italic',
+                           xycoords='axes fraction')
+        
+        
+        
+        ax[row,1].set_ylabel('Mean Lifetime (τ)',fontsize=18)
+        ax[row,1].set_xlabel('Cluster Size (n)',fontsize=18)
+        
+        
         fig.tight_layout()
-        
-    return ax
+        fig.subplots_adjust(wspace=0.1, hspace=0.25)
 
-def makePlotMulti_surface(dfs:list,*args,**kwargs)->plt.Axes:
-    """
-    takes multiple DataFrames and make multiple rows 
-    of figures showing clusters and lifetimes
-
-    Parameters
-    ----------
-    dfs : list
-        list of dataframes
-
-    Returns
-    -------
-    plt.Axes
-        _description_
-    """
-
-
-    
-    #clear graph settings
-    sns.set_theme(style='ticks',
-        rc = {
-              'font.weight':'light',
-              'font.size':14,
-              'font.family':'Arial',
-              'ytick.minor.size':'0',
-              'ytick.major.size':'10',
-              'xtick.major.size':'10'
-              
-              }
-        )
-    
-    num_rows = len(dfs)
-    fig,ax = plt.subplots(num_rows,2,figsize=(16,4.5*num_rows),
-                          gridspec_kw={'width_ratios': [2.5, 1]})
-    
-    for row,df in enumerate(dfs):
-        df = df[df.clusterID>0]
-        time = np.random.choice(df.timestep.unique())
-        N = len(np.unique(df.timestep))
-    
-        #showing the system -------------SCATTER-----------------------------------
-        sns.scatterplot(data = df[(df.timestep==time)&(df.type == 5)],
-                        x='x',y='y',size='z',
-                        hue='residence',palette='Purples',
-                        edgecolor='k',ax=ax[row,0])
-        ax[row,0].annotate(xy=(0.05,0.1),
-                       text=f't = {time} a.u',fontweight='bold',
-                       xycoords='axes fraction')
-        ax[row,0].set_ylabel('y',fontsize=16)
-        ax[row,0].set_xlabel('x',fontsize=16)
-        ax[row,0].set_xlim([-90,90])
-        ax[row,0].set_ylim([-30,30])
-        #adding color bar
-        norm = plt.Normalize(df.tau.min(), df.tau.max())
-        purples = plt.cm.ScalarMappable(cmap="Purples",norm=norm)
-        purples.set_array([])
-        ax[row,0].get_legend().remove()
-        ax[row,0].figure.colorbar(purples,ax=ax[row,0],location='right',
-                              shrink=1,)
-        
-    
-        #regression  -----------------REGRESSION-----------------------------------
-        dfs = simplify(df)
-        sns.regplot(data =  dfs,x='clusterSize',y='tau',
-                    ax=ax[row,1],color='red')
-        #finding correlation coeff
-        r,p = stats.pearsonr(df['clusterSize'],y=df['tau'])
-        ax[row,1].annotate(xy=(0.05,0.90),
-                       text=f'r = {r:.2f}',fontweight='bold',
-                       xycoords='axes fraction')
-        ax[row,1].annotate(xy=(0.85,0.05),
-                       text=f'N = {N}',fontweight='bold',
-                       xycoords='axes fraction')
-        ax[row,1].set_ylabel('Mean Lifetime',fontsize=16)
-        ax[row,1].set_xlabel('Cluster Size',fontsize=16)
-    
-        fig.tight_layout()
-        
     return ax
 
 
@@ -598,9 +549,9 @@ if __name__ == '__main__':
         dfs = [df280,df300,df350,df400]
         
         ax = makePlotMulti_tau(dfs)
-        plt.savefig('./graphs/multi_tau.pdf',transparent=True)
+        plt.savefig('../Figures/fig4.pdf',transparent=True)
         # ax1 = makePlotMulti_surface(dfs)
-        # plt.savefig('./graphs/multi_surface.pdf',transparent=True)
+        # plt.savefig('../SI_Figures/multi_surface.pdf',transparent=True)
 
         
         
