@@ -344,7 +344,7 @@ def makePlot(df:pd.DataFrame,*args,**kwargs)->plt.Axes:
     ax[0].get_legend().remove()
     ax[0].figure.colorbar(purples,ax=ax[0],location='right',
                           shrink=1,label='Mean Lifetime')
-    
+    ax[0].figure.tick_params(labelsize=30)
 
     #regression  -----------------REGRESSION-----------------------------------
     sns.regplot(df,x='clusterSize',y='tau',
@@ -408,11 +408,14 @@ def makePlotMulti_tau(dfs:list,*args,**kwargs)->plt.Axes:
     num_rows = len(dfs)
     fig,ax = plt.subplots(num_rows,2,figsize=(16,4.5*num_rows),
                           gridspec_kw={'width_ratios': [2.5, 1]})
-    
+    kts = [2.80,3.00,3.50,4.00]
     for row,df in enumerate(dfs):
         df = df[df.clusterID>0]
         time = np.random.choice(df.timestep.unique())
         N = len(np.unique(df.timestep))
+
+
+        kt = kts[row]
         #plotting the -----------------CAPSID------------------
         sns.scatterplot(data=capsid,color='#900C3F',
                         ax=ax[row,0],x='x',y='y',
@@ -425,11 +428,16 @@ def makePlotMulti_tau(dfs:list,*args,**kwargs)->plt.Axes:
                         palette='Purples',
                         edgecolor='k',
                         ax=ax[row,0],
-                        linewidth=0.001)
+                        linewidth=0.3)
         ax[row,0].annotate(xy=(0.12,0.06), fontsize =16, 
                            text=f'Timestep = {time}',
                            fontweight='bold', style = 'italic',
                            xycoords='axes fraction')
+        #ax[row,0].annotate(xy=(0.12,0.90), fontsize =20, 
+         #          text=f'{kt:.1f}kT',
+          #         fontweight='bold', style = 'italic',
+           #        xycoords='axes fraction')
+        ax[row,0].set_title(f'{kt:.1f}kT',fontweight='light', fontsize=24)
         ax[row,0].set_ylabel('')
         ax[row,0].set_xlabel('')
         ax[row,0].set_xlim([-92,92])
@@ -443,15 +451,13 @@ def makePlotMulti_tau(dfs:list,*args,**kwargs)->plt.Axes:
         ax[row,0].get_legend().remove()
         ax[row,0].figure.colorbar(purples,
                                   ax=ax[row,0],
-                                  location='left',
+                                  location='right',
                                   shrink=1,
                                   extend='both',
                                   pad = 0.01,
-                                  label='Mean Lifetime (τ)'
                                   )
         sns.despine(ax= ax[row,0],left=True,bottom=True)
-        
-    
+
         #regression  -----------------REGRESSION-----------------------------------
         df_simple = simplify(df)
         sns.regplot(data = df_simple,x='clusterSize',y='tau',
@@ -475,14 +481,17 @@ def makePlotMulti_tau(dfs:list,*args,**kwargs)->plt.Axes:
         
         
         
-        ax[row,1].set_ylabel('Mean Lifetime (τ)',fontsize=18)
-        ax[row,1].set_xlabel('Cluster Size (n)',fontsize=18)
+        ax[row,1].set_ylabel('Mean Lifetime (a.u.)',fontsize=18)
+        ax[row,1].set_xlabel('Cluster Size (#TF)',fontsize=18)
         
+
+        #plt.annotate('A',xycoords='figure fraction', xy = (0.01,0.95),fontsize=48)
+        #plt.annotate('B',xycoords='figure fraction', xy = (0.69,0.95),fontsize=48)
         
         fig.tight_layout()
-        fig.subplots_adjust(wspace=0.1, hspace=0.25)
+        fig.subplots_adjust(wspace=0, hspace=0.25)
 
-    return ax
+    return fig
 
 
 if __name__ == '__main__':
@@ -548,8 +557,17 @@ if __name__ == '__main__':
         
         dfs = [df280,df300,df350,df400]
         
-        ax = makePlotMulti_tau(dfs)
-        plt.savefig('../Figures/fig4.pdf',transparent=True)
+        fig = makePlotMulti_tau(dfs)
+
+
+
+        plt.tight_layout()
+
+        plt.annotate('A',xycoords='figure fraction', xy = (0.023,0.965),fontsize=48)
+        plt.annotate('B',xycoords='figure fraction', xy = (0.66,0.965),fontsize=48)
+
+        fig.savefig('../Figures/fig4.pdf',transparent=True)
+        fig.savefig('../Figures/fig4.png', dpi=300, transparent=True)
         # ax1 = makePlotMulti_surface(dfs)
         # plt.savefig('../SI_Figures/multi_surface.pdf',transparent=True)
 

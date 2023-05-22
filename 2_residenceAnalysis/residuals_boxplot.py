@@ -5,7 +5,7 @@ import seaborn as sns
 import os
 
 
-def residuals2boxplot(residuals:pd.DataFrame,hue_by=None,
+def residuals2boxplot(residuals:pd.DataFrame,hue_by=None, index=0,
                       graphname:str='residuals',palette:str='flare'):
     #residues of equations
     ax = plt.figure(figsize=(8,6))
@@ -59,7 +59,7 @@ def residuals2boxplot(residuals:pd.DataFrame,hue_by=None,
     #creating folder(if not already there), saving the graph
     if not os.path.exists('./boxplots'):
         os.mkdir('boxplots')
-    plt.savefig(f'./boxplots/{graphname}_by_{hue_by}.pdf',
+    plt.savefig(f'../Figures/fig2B_{index}.pdf',
                 transparent=True,
                 bbox_inches='tight')
     # plt.close()
@@ -85,16 +85,19 @@ if __name__ == '__main__':
     residuals2boxplot(res_melted,
                       graphname='residuals',
                       hue_by='energy',
-                      palette='viridis_r')
+                      palette='viridis_r',
+                      index=2)
     #graph by concentration
     residuals2boxplot(res_melted,
                       graphname='residuals',
                       hue_by='concentration',
-                      palette='mako_r')
+                      palette='mako_r',
+                      index=1)
     
     #graph by concentration
     residuals2boxplot(res_melted,
                       graphname='residuals_averaged',
                       palette='husl',
-                      hue_by=None)
+                      hue_by=None,
+                      index=0)
     

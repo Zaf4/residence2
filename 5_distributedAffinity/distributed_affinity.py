@@ -7,7 +7,11 @@ import math
 from scipy.optimize import curve_fit
 from scipy import special
 
+# suppress the warning
 warnings.filterwarnings('ignore')
+pd.set_option('mode.chained_assignment', None)
+
+
 
 def deleteNaN(y:np.ndarray)->tuple[np.ndarray,np.ndarray]:
     """
@@ -54,9 +58,9 @@ def quad_exp(x,a,b,c,d,e,f,g,h):
 def penta_exp(x,a,b,c,d,e,f,g,h,i,j):
     return a*np.exp(-x*b) + c*np.exp(-x*d)+e*np.exp(-x*f)+g*np.exp(-x*h)+i*np.exp(-x*j)
 
-def value_fit(val:np.ndarray,eq:callable)->tuple[np.ndarray,np.ndarray,tuple]:
+def value_fit(val:np.ndarray,
+              eq:callable,sigma_w = False)->tuple[np.ndarray,np.ndarray,tuple]:
     """
-    
 
     Parameters
     ----------
@@ -80,9 +84,19 @@ def value_fit(val:np.ndarray,eq:callable)->tuple[np.ndarray,np.ndarray,tuple]:
     residual_t = np.zeros([len(val),2])
     
     t,val = deleteNaN(val)
+    t = t.astype(np.float64)
+    val = val.astype(np.float64)
 
+    if sigma_w:
+        sigma = t**-10
+        popt, pcov= curve_fit(eq, t, val, 
+                              maxfev=20000000,
+                              sigma=sigma)
+
+    else:
+        popt, pcov= curve_fit(eq, t, val,
+                              maxfev=20000000)
     
-    popt, pcov= curve_fit(eq, t, val, maxfev=20000000)
     residuals = (val- eq(t, *popt))
     ress_sumofsqr =np.sum(residuals**2)
     ss_res_norm = ress_sumofsqr/len(val)
@@ -90,7 +104,7 @@ def value_fit(val:np.ndarray,eq:callable)->tuple[np.ndarray,np.ndarray,tuple]:
     
     y_fit = eq(t_range, *popt)#full time length
     y_fit[y_fit<1] = np.nan#too small values to be removed
-    y_fit[y_fit>np.max(val)*1.2] = np.nan#too big values removed
+    y_fit[y_fit>np.max(val)*1.5] = np.nan#too big values removed
     
     return y_fit,ss_res_norm,popt
 
@@ -124,13 +138,17 @@ def arr_minimize(arr:np.ndarray,method:str='median')->np.ndarray:
     
         elif method == 'average': 
             mid = int(np.average(positions))
+        elif method == 'max': 
+            mid = int(np.max(positions))
+        elif method == 'min': 
+            mid = int(np.min(positions))
         
         arr1[positions] = np.nan
         arr1[mid] = s #mid value is kept
         
     return arr1
 
-def df_minimize(df:pd.DataFrame)->pd.DataFrame:
+def df_minimize(df:pd.DataFrame,**kwargs)->pd.DataFrame:
     """
     
 
@@ -146,15 +164,13 @@ def df_minimize(df:pd.DataFrame)->pd.DataFrame:
 
     """
     for i in range(len(df.columns)):
-        df.iloc[:,i] = arr_minimize(df.iloc[:,i]) #values minimized and returned
+        df.iloc[:,i] = arr_minimize(df.iloc[:,i],**kwargs) #values minimized and returned
 
     return df
 
-
-
 def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
                     i:int, j:int, axes,
-                    palette: str, **kwargs) -> plt.Axes:
+                    palette: str, **kwargs):
     """
 
 
@@ -164,8 +180,6 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
         Main data.
     fits : pd.DataFrame
         Equation fit of the main data.
-    color: list
-        Colors range.
 
     Returns
     -------
@@ -174,6 +188,22 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
 
     """
     
+    #preprocess raw data and fits for graph------------------------------------
+    cols = [col for col in df]
+    df['timestep'] = np.arange(len(df))+1
+    fits['timestep'] = np.arange(len(df))+1
+    
+    fits = pd.melt(fits,
+                   id_vars=['timestep'],
+                   value_vars=cols,
+                   var_name='case',
+                   value_name='value')
+    
+    df = pd.melt(df,
+                 id_vars=['timestep'],
+                 value_vars=cols,
+                 var_name='case',
+                 value_name='value')
     
     ax = axes[i,j]
 
@@ -181,56 +211,61 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
     df.index = np.arange(len(df))+1
     fits.index = np.arange(len(df))+1
 
-    # seting seaborn parameters
-    font = {'family': 'Arial',
+    #font settings
+    font = {'family': 'Sans Serif',
             'weight': 'light',
-            'size': 14,
+            'size': 20,
             }
+    
+    #weight calculation to prevent overcrowding
+    ts = np.array(df.timestep)
+    # weights = ((1/(ts*ts[::-1]))*10**5)**2
+    tmax = df.timestep.max()
+    weights = ts**2-tmax*ts+(tmax/2)**2
+    #scattter plot (Data)------------------------------------------------------
+    sns.scatterplot(data=df.sample(frac=0.25,random_state=42,weights=weights),
+                    x='timestep',
+                    y='value',
+                    palette=palette,
+                    hue='case',
+                    hue_order=cols,
+                    alpha=0.6,
+                    s=300,
+                    edgecolor='white', 
+                    linewidth=1.8,
+                    # legend=False,
+                    ax=ax,
+                    **kwargs)
+    
+    #Line plot (Fits)----------------------------------------------------------
+    sns.lineplot(data=fits,
+                 x='timestep',
+                 y='value',
+                 palette=palette,
+                 hue='case',
+                 ax=ax,
+                 linewidth=7,
+                 linestyle='dashed',
+                 legend=False,
+                 alpha=1, 
+                 **kwargs)
 
-    sns.set(style='ticks',
-            palette=palette,
-            rc={
-                'font.weight': 'light',
-                'font.family': 'sans-serif',
-                'axes.spines.top': 'False',
-                'axes.spines.right': 'False',
-                'ytick.minor.size': '0',
-                'xtick.minor.size': '0',
-                'ytick.major.size': '10',
-                'xtick.major.size': '10',
-                'legend.frameon': False
+    #graph settings------------------------------------------------------------
+    
+    ax.tick_params(axis='both',labelsize=21)
+    # for lh in ax.get_legend().legendHandles:
+    #     lh.set_sizes([300])
+        
 
-                }
-            )
-
-    sns.set_palette(palette)
-    for i, col in enumerate(df):
-        # scatterplot
-        sns.scatterplot(data=df[col], s=40,
-                        # edgecolor=None,
-                        alpha=0.4,
-                        edgecolor='white', 
-                        linewidth=0.01,
-                        ax=ax,
-                        **kwargs)
-    for i, col in enumerate(fits):
-        # lineplot
-        sns.lineplot(data=fits[col],
-                     ax=ax, linewidth=3,
-                     # color='#1f1f1f',
-                     linestyle='dashed', alpha=1, **kwargs)
-
-    ax.tick_params(axis='both',labelsize=12)
     ax.set_yscale('log')
     ax.set_xscale('log')
     ax.set_xlim([0.72, 3.7e3])
-    ax.set_ylim([0.5, 1e6])
-    
-    
-    ax.set_xlabel(None)
-    ax.set_ylabel(None)
-    # ax.set_xlabel('Duration (a.u.)', fontdict=font)
-    # ax.set_ylabel('Occurence', fontdict=font)
+    ax.set_ylim([0.5, 1e7])
+    #ax.get_legend().remove()
+    if j == 0:
+        ax.legend(markerscale=3,fontsize=18)
+    else:
+        ax.get_legend().remove()
 
     return
 
@@ -238,55 +273,99 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
 if __name__ == '__main__':
     
     #values dataframe
-    df = pd.read_csv('duration_cont.csv',index_col=None)
-    df = df_minimize(df)
-
-    #multi plot
-    nrow = 1
-    ncol = 2
-    fig, axes = plt.subplots(nrow, ncol, figsize=(ncol*8, nrow*6))    
+    df = pd.read_csv('./data/duration_cont.csv',index_col=None)
+    df = df_minimize(df,method='median')
+    df[df==0] = np.nan
+    ts = np.arange(len(df))+1
+    df['timestep'] = ts
     
+    df.rename(columns = {'uniform_250':'1-4kT Uniform', 'uniform_350':'2-5kT Uniform',
+                        'gaus_250':'1-4kT Normal','gaus_350':'2-5kT Normal'}, inplace = True)
 
+    #reference line
+    ref = df[['timestep','3.50_60']]
+    #weight calculation to prevent overcrowding
+    tmax = df.timestep.max()
+    weights = ts**2-tmax*ts+(tmax/2)**2
+    
+    
+    sns.set_theme(style='ticks',
+                  rc={
+                  'font.weight': 'light',
+                  'font.family': 'sans-serif',
+                  'axes.spines.top': 'False',
+                  'axes.spines.right': 'False',
+                  'ytick.minor.size': '0',
+                  'xtick.minor.size': '0',
+                  'ytick.major.size': '10',
+                  'xtick.major.size': '10',
+                  'legend.frameon': False,
+    
+                     }
+                  )
+    #multi plot
+    nrow = 2
+    ncol = 3
+    fig, axes = plt.subplots(nrow, ncol, figsize=(ncol*7, nrow*6))    
+    fig.supxlabel('Duration (a.u.)', fontsize=28,fontweight='light')
+    fig.supylabel('Occurence (n)', fontsize=28,fontweight='light') 
+    #Unifrom vs Gaussian distro
+    uniform = ['1-4kT Uniform', '2-5kT Uniform',]
+    gaus = ['1-4kT Normal','2-5kT Normal']
+    
+    palettes= ['RdPu','mako_r']
     #fits dataframe eq + val
-    for i,eqx in enumerate([double_exp,powerlaw]):
+    for i,eqx in enumerate([tri_exp,powerlaw,powerlaw]):
         fits = pd.DataFrame()
         part = pd.DataFrame()
         col_names = []
+
+        #creating fits and partial data df
         for col in df:
-            fits[col],_,_ = value_fit(np.array(df[col]),eq=eqx)
+            if i == 2:
+                
+                fits[col],_,_ = value_fit(np.array(df[col]),eq=eqx,sigma_w=True)#fitting part
+            else:
+                
+                fits[col],_,_ = value_fit(np.array(df[col]),eq=eqx)#fitting part
             part[col] = df[col]
             col_names.append(col)
-        
-        ax = axes[i]
-        fits['timepoint'] = np.arange(1,len(df)+1)
-        part['timepoint'] = np.arange(1,len(df)+1)
-        
-        #melting fits
-        fits = pd.melt(fits,
-                       value_vars=col_names,
-                       id_vars = ['timepoint'],
-                       var_name = 'x',
-                       value_name='values')
-        #melting data
-        part = pd.melt(part,
-                       value_vars=col_names,
-                       id_vars = ['timepoint'],
-                       var_name = 'x',
-                       value_name='values')
-        #plotting
-        sns.lineplot(data=fits,x='timepoint',y='values',
-                     ax=axes[i],palette='viridis',hue='x')
-        sns.scatterplot(data=part,x='timepoint',y='values',
-                        ax=axes[i],palette='viridis',hue='x')
-        
-        ax.set_yscale('log')
-        ax.set_xscale('log')
-        ax.set_xlim([0.72, 3.7e3])
-        ax.set_ylim([0.5, 1e7])
-        
-        
-        ax.set_xlabel(None)
-        ax.set_ylabel(None)
-    
+            
+        for j,col_type in enumerate([uniform,gaus]):
+            
+            ax = axes[j,i]
+            
+            scatterit_multi(part[col_type],
+                            fits,
+                            i=j,
+                            j=i,
+                            axes=axes,
+                            palette=palettes[j])
+            
+            sns.lineplot(data=ref,
+                            x='timestep',
+                            y='3.50_60',
+                            ax=ax,
+                            color='k',
+                            linewidth=3,
+                            legend=False,
+                            )
+            ax.set_xlabel(None)
+            ax.set_ylabel(None)
+            #lgnd = plt.legend(['1-4kT','2-5kT'])
+            #lgnd.legendHandles[0]._legmarker.set_markersize(6)
+            #lgnd.legendHandles[1]._legmarker.set_markersize(6)
+            #ax.legend(['1-4kT','2-5kT'],markerscale=1,fontsize=20)
+            
+
+
+    fig.tight_layout(w_pad=4,h_pad=2)
+    #plt.legend()
+    plt.annotate('A',xycoords='figure fraction', xy = (0.01,0.95),fontsize=48)
+    plt.annotate('B',xycoords='figure fraction', xy = (0.34,0.95),fontsize=48)
+    plt.annotate('C',xycoords='figure fraction', xy = (0.67,0.95),fontsize=48)
+    fig.savefig('../Figures/fig6.pdf', transparent=True)
+    fig.savefig('../Figures/fig6.png', dpi=300, transparent=True)
+
 
 

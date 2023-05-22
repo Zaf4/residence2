@@ -56,7 +56,7 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
     #font settings
     font = {'family': 'Sans Serif',
             'weight': 'light',
-            'size': 14,
+            'size': 20,
             }
     
     #weight calculation to prevent overcrowding
@@ -71,10 +71,10 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
                     palette=palette,
                     hue='case',
                     hue_order=cols,
-                    alpha=0.6,
+                    alpha=0.4,
                     s=60,
                     edgecolor=None, 
-                    linewidth=0.1,
+                    #linewidth=0.1,
                     ax=ax,
                     **kwargs)
     #Line plot (Fits)----------------------------------------------------------
@@ -100,6 +100,7 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
     ax.set_ylim([0.5, 1e6])
     ax.set_xlabel(None)
     ax.set_ylabel(None)
+
     # ax.set_xlabel('Duration (a.u.)', fontdict=font)
     # ax.set_ylabel('Occurence', fontdict=font)
 
@@ -182,17 +183,19 @@ def generate_fit_graph(datafile:str = './data/durations_minimized.csv',
                                 i=i, j=j)
                 
                 legend = [f'{x[:4]}kT' for x in cols]
-                figname = 'fig2'
+                figname = 'fig2A'
 
             # plt.legend(legend)
             # creating folder(if not already there), saving the graph
             if not os.path.exists('./graphs'):
                 os.mkdir('graphs')
                 
-    fig.legend(legend,loc=(0.15,0.92),fontsize=15,markerscale=1.4,
-               labelspacing=0.25,edgecolor='k')   
+    fig.legend(legend,loc=(0.20,0.92),fontsize=15,markerscale=1.4,
+               labelspacing=0.25,edgecolor='k')  
+    fig.supxlabel('Duration (a.u.)', fontsize=24,fontweight='light')
+    fig.supylabel('Occurence (n)', fontsize=24,fontweight='light') 
     plt.tight_layout()
-    plt.savefig('./graphs/{figname}.pdf',
+    plt.savefig(f'../Figures/{figname}.pdf',
                 transparent=True, bbox_inches='tight')
    
     return fig

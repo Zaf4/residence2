@@ -32,7 +32,7 @@ mapping = {
 #font parameters
 fontparams = {         
               'fontweight':'light',
-              'fontsize':16,
+              'fontsize':20,
               'fontname':'Sans Serif',
 
               }
@@ -41,7 +41,7 @@ fontparams = {
 sns.set_theme(style='ticks',
     rc = {
           'font.weight':'light',
-          'font.size':14,
+          'font.size':20,
           'font.family':'Sans Serif',
           'ytick.minor.size':'0',
           'ytick.major.size':'10',
@@ -79,7 +79,7 @@ for i,df in enumerate(dfs):
     swarm_data = df.sample(frac=0.12,random_state = 42,weights=df.residence**2)
     sns.swarmplot(data=swarm_data,
                   x='kind',y='residence',
-                  ax=axes[1,i],size=3.5,order = ['free','surf','core'],
+                  ax=axes[1,i],size=2.5,order = ['free','surf','core'],
                   palette='husl',edgecolor='k')
     
 
@@ -109,10 +109,10 @@ for i,df in enumerate(dfs):
     for j in range(2):
         ax = axes[j,i]
         ax.set_xlabel(None)
-        ax.set_ylabel('Residence Time, a.u',**fontparams)
+        ax.set_ylabel('Residence Time (a.u)',**fontparams)
         ax.set_xticks([0, 1, 2])
         ax.set_xticklabels(['Free', 'Surface', 'Core'],
-                            fontsize=14,fontweight='light')
+                            fontsize=20,fontweight='light')
         
         ax.tick_params(axis='y',
                        labelsize=18)
@@ -126,7 +126,12 @@ for i,df in enumerate(dfs):
 
 #overall figure setting and saving
 sns.despine(trim=True)
-plt.tight_layout()
-plt.savefig('./graphs/fig5.pdf')
 
-    
+plt.tight_layout()
+
+plt.annotate('A',xycoords='figure fraction', xy = (0.01,0.93),fontsize=48)
+plt.annotate('B',xycoords='figure fraction', xy = (0.01,0.45),fontsize=48)
+
+
+fig.savefig('../Figures/fig5.pdf',transparent=True)
+fig.savefig('../Figures/fig5.png',transparent=True,dpi=300)

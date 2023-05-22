@@ -361,7 +361,7 @@ def createFigures(cases = [100,280,300,350,400]):
         system_scatter(coor,axes,row=i,col=0,x='x',y='y',hue='type')
 
         #proteins alone
-        protein_scatter(coor,axes,row=i,col=1, x='x',y='y',hue='type')
+        protein_scatter(coor,axes,row=i,col=1,x='x',y='y',hue='type')
 
         #only clusters
         cluster_scatter(coor,axes,row=i,col=2,x='x',y='y')
@@ -373,8 +373,11 @@ def createFigures(cases = [100,280,300,350,400]):
 if __name__ == '__main__':
     fig = createFigures()
     plt.tight_layout()
-    plt.savefig('../Figures/fig3.png',
-                transparent=True, bbox_inches='tight')
-
+    plt.annotate('A',xycoords='figure fraction', xy = (0.01,0.98),fontsize=64)
+    plt.annotate('B',xycoords='figure fraction', xy = (0.34,0.98),fontsize=64)
+    plt.annotate('C',xycoords='figure fraction', xy = (0.67,0.98),fontsize=64)
+    
+    fig.savefig('../Figures/fig3.pdf', transparent=True, bbox_inches='tight')
+    fig.savefig('../Figures/fig3.jpg',transparent=True, bbox_inches='tight',dpi=96)
 
     
