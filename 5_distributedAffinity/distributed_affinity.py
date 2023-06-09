@@ -4,6 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import warnings
 import math
+import os
 from scipy.optimize import curve_fit
 from scipy import special
 
@@ -271,6 +272,8 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
 
 
 if __name__ == '__main__':
+    #changing working directory to current directory name
+    os.chdir(os.path.dirname(__file__))
     
     #values dataframe
     df = pd.read_csv('./data/duration_cont.csv',index_col=None)

@@ -241,6 +241,8 @@ def equation_fit_save(datafile:os.PathLike)->None:
 
     
 if __name__ == '__main__':
+    #changing working directory to current directory name
+    os.chdir(os.path.dirname(__file__))
 
     popt = equation_fit_save('./data/durations.csv')
 

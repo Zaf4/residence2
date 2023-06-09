@@ -4,7 +4,10 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from scipy import stats
 import statannot
+import os
 
+#changing working directory to current directory name
+os.chdir(os.path.dirname(__file__))
 
 def round_up(value:float|int):
     n_digits = len(str(int(value)))

@@ -550,6 +550,8 @@ if __name__ == '__main__':
     
     else:
         #_______this part is done on PC to data obtained from Cluster_________
+        #changing working directory to current directory name
+        os.chdir(os.path.dirname(__file__))
         df280 = pd.read_csv('./data/12timepoint/280.csv', index_col=False)
         df300 = pd.read_csv('./data/12timepoint/300.csv', index_col=False)
         df350 = pd.read_csv('./data/12timepoint/350.csv', index_col=False)

@@ -371,11 +371,15 @@ def createFigures(cases = [100,280,300,350,400]):
 
 
 if __name__ == '__main__':
+    #changing working directory to current directory name
+    os.chdir(os.path.dirname(__file__))
+
     fig = createFigures()
     plt.tight_layout()
-    plt.annotate('A',xycoords='figure fraction', xy = (0.01,0.98),fontsize=64)
-    plt.annotate('B',xycoords='figure fraction', xy = (0.34,0.98),fontsize=64)
-    plt.annotate('C',xycoords='figure fraction', xy = (0.67,0.98),fontsize=64)
+
+    plt.annotate('A',xycoords='figure fraction', xy = (0.01,0.98),fontsize=64,color='black')
+    plt.annotate('B',xycoords='figure fraction', xy = (0.34,0.98),fontsize=64,color='black')
+    plt.annotate('C',xycoords='figure fraction', xy = (0.67,0.98),fontsize=64,color='black')
     
     fig.savefig('../Figures/fig3.pdf', transparent=True, bbox_inches='tight')
     fig.savefig('../Figures/fig3.jpg',transparent=True, bbox_inches='tight',dpi=96)

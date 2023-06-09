@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 from rich.progress import track
-
+import pathlib
 
 # suppress the warning
 pd.set_option('mode.chained_assignment', None)
@@ -12,7 +12,7 @@ pd.set_option('mode.chained_assignment', None)
 
 def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
                     i:int, j:int, axes,
-                    palette: str, **kwargs) -> plt.Axes:
+                    palette: str, **kwargs) -> None:
     """
 
 
@@ -88,6 +88,18 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
                  linestyle='dashed',
                  alpha=1, 
                  **kwargs)
+    
+        #Line plot (Fits)----------------------------------------------------------
+    sns.lineplot(data=fits,
+                 x='timestep',
+                 y='value',
+                 color='black',
+                 hue='case',
+                 ax=ax,
+                 linewidth=2.5,
+                 linestyle='dashed',
+                 alpha=0.3, 
+                 **kwargs)
 
 
     #graph settings------------------------------------------------------------
@@ -108,7 +120,7 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
 
 
 def generate_fit_graph(datafile:str = './data/durations_minimized.csv',
-                       keywords:list[str] = ['10','20','40','60']) -> None:
+                       keywords:list[str] = ['10','20','40','60']):
     """
 
 
@@ -123,13 +135,9 @@ def generate_fit_graph(datafile:str = './data/durations_minimized.csv',
     None
 
     """
-
-    
     durations = pd.read_csv(datafile, index_col=None)
-
     eqnames = ['ED','DED','TED','QED','PED','Powerlaw']
     
-
     nrow, ncol = len(eqnames), len(keywords)
 
     #seaborn settings
@@ -151,9 +159,11 @@ def generate_fit_graph(datafile:str = './data/durations_minimized.csv',
                              sharex=True,sharey=True,
                              figsize=(ncol*4, nrow*3))
 
+    legend,figname = '',''
+
     for i, eqname in track(enumerate(eqnames),total=len(eqnames)):
         for j, keyword in enumerate(keywords):
-
+            
             fitfile = f'./data/{eqname}.csv'
 
             fits = pd.read_csv(fitfile, index_col=None)
@@ -166,11 +176,12 @@ def generate_fit_graph(datafile:str = './data/durations_minimized.csv',
             partial_fits = fits[cols]
 
             if '.' in keyword:  # if for energy
-
+            
                 scatterit_multi(partial_data,
                                 partial_fits,
                                 axes=axes,
-                                palette='mako_r')
+                                palette='mako_r',
+                                i=i, j=j)
 
                 legend = [f'{x[-2:]}µM' for x in cols]
                 figname = 'SI-fig1'
@@ -202,19 +213,12 @@ def generate_fit_graph(datafile:str = './data/durations_minimized.csv',
 
 
 if __name__ == '__main__':
+    #changing working directory to current directory name
+    os.chdir(os.path.dirname(__file__))
 
-    
     ums = ['10','20','40','60']
     kts = ['1.00','2.80','3.00','3.50','4.00']
     
-    
     fig = generate_fit_graph(keywords=ums)
     #plt.show()
-    
-
-
-
-    
-    
-    
     

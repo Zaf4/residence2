@@ -1,38 +1,22 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import seaborn as sns
 import os
 
 
-def residuals2boxplot(residuals:pd.DataFrame,hue_by=None, index=0,
+# docstring from _suplabels...
+info = {'name': '_supylabel', 'x0': 0.1, 'y0': 0.5,
+        'ha': 'left', 'va': 'center', 'rotation': 'vertical',
+        'rotation_mode': 'anchor'}
+
+def residuals2boxplot(residuals:pd.DataFrame,ax,hue=None,
                       graphname:str='residuals',palette:str='flare'):
-    #residues of equations
-    ax = plt.figure(figsize=(8,6))
     
     #upper and lower boundaries for the aesthetics
     upper = 10**np.ceil(np.log10(residuals.value.max())) #upper boundary of boxplot
     lower = 10**np.floor(np.log10(residuals.value.min())) #lower boundary
-    
-    
-    #font and style setttings
-    font = {'family': 'sans-serif',
-            'weight': 'bold',
-            'size': 18,
-            }
-    sns.set(style='ticks',
-        rc = {
-              #'font.weight':'light',
-              'font.family':'sans-serif',
-              'axes.spines.top':'False',
-              'axes.spines.right':'False',
-              'ytick.minor.size':'0',
-              'ytick.major.size':'10',
-              'xtick.major.size':'10',
-              'legend.frameon':False
-              
-              }
-        )
     
     #kwargs for the boxplot
     props = {
@@ -43,30 +27,29 @@ def residuals2boxplot(residuals:pd.DataFrame,hue_by=None, index=0,
     
     }
     
-    
+
     #boxplot for the residual comparison
-    sns.boxplot(residuals,y='value',hue = hue_by,x='variable',
-                palette=palette, saturation=1,linewidth=1,
+    sns.boxplot(residuals,y='value',hue = hue,x='variable',
+                palette=palette, saturation=1,linewidth=1.6,ax=ax,
                 showfliers=False,**props)
-    #labeling,modyifying and scaling then saving
-    plt.legend(title=None,fontsize=18,loc='upper center')
-    plt.xlabel(None)
-    plt.ylabel('Normalized RSS',fontdict=font)
-    plt.yscale('log')
-    plt.ylim([lower,upper])
-    plt.tick_params(axis='both',labelsize=18)
+    #labeling,modyifying and scaling the axes
+    ax.legend(title=None,fontsize=18,loc='upper center')
+    ax.set_xlabel(None)
+    ax.set_ylabel(None)
+    ax.set_yscale('log')
+    ax.set_ylim([lower,upper])
+    ax.tick_params(axis='x',labelsize=20,rotation=30)
+    ax.tick_params(axis='y',labelsize=22)
     
-    #creating folder(if not already there), saving the graph
-    if not os.path.exists('./boxplots'):
-        os.mkdir('boxplots')
-    plt.savefig(f'../Figures/fig2B_{index}.pdf',
-                transparent=True,
-                bbox_inches='tight')
+
     # plt.close()
     return
 
 if __name__ == '__main__':
-   
+
+    #changing working directory to current directory name
+    os.chdir(os.path.dirname(__file__))
+    
     residuals = pd.read_csv('./data/residuals.csv',index_col=0)
     
     kts = [f'{x[:4]}kT' for x in residuals.index]
@@ -81,23 +64,51 @@ if __name__ == '__main__':
                          value_vars=['ED','DED','TED','QED','PED','Powerlaw'],
                          id_vars=['energy','concentration'])
     
+    #plot settings
+    sns.set(style='ticks',
+    rc = {
+            #'font.weight':'light',
+            'font.family':'sans-serif',
+            'axes.spines.top':'False',
+            'axes.spines.right':'False',
+            'ytick.minor.size':'0',
+            'ytick.major.size':'10',
+            'xtick.major.size':'10',
+            'legend.frameon':False,
+            'legend.fancybox':True,
+            'legend.edgecolor':'black',
+            # 'legend.linewidth':'1.6'
+            
+            
+            }
+    )
+    #plotting section
+
+    fig,axes = plt.subplots(nrows=3,ncols=1,figsize=(8,18))
+
     #graph by energy
     residuals2boxplot(res_melted,
                       graphname='residuals',
-                      hue_by='energy',
+                      hue='energy',
                       palette='viridis_r',
-                      index=2)
+                      ax=axes[2])
     #graph by concentration
     residuals2boxplot(res_melted,
                       graphname='residuals',
-                      hue_by='concentration',
+                      hue='concentration',
                       palette='mako_r',
-                      index=1)
+                      ax=axes[1])
     
     #graph by concentration
     residuals2boxplot(res_melted,
                       graphname='residuals_averaged',
                       palette='husl',
-                      hue_by=None,
-                      index=0)
+                      hue=None,
+                      ax=axes[0])
     
+    fig.supylabel('Normalized Residual Sum of Squares',fontsize=24,fontfamily='sans-serif',x=-0.02)
+    
+    ##saving the figure
+    fig.savefig('../Figures/fig2B.pdf',
+                transparent=True,
+                bbox_inches='tight')
