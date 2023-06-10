@@ -78,7 +78,7 @@ def value_fit(val:np.ndarray,eq:callable)->tuple[np.ndarray,np.ndarray,tuple]:
     
     y_fit = eq(t_range, *popt)#full time length
     y_fit[y_fit<1] = np.nan#too small values to be removed
-    y_fit[y_fit>np.max(val)*1.2] = np.nan#too big values removed
+    y_fit[y_fit>np.max(val)*2] = np.nan#too big values removed
     
     return y_fit,ss_res_norm,popt
 

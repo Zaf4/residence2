@@ -396,23 +396,23 @@ def makePlotMulti_tau(dfs:list,*args,**kwargs)->plt.Axes:
     sns.set_theme(style='ticks',
         rc = {
               'font.weight':'light',
-              'font.size':18,
+              'font.size':21,
               'font.family':'sans-serif',
               'ytick.minor.size':'0',
-              'ytick.major.size':'10',
-              'xtick.major.size':'10'
+              'ytick.major.size':'6',
+              'xtick.major.size':'6'
               
               }
         )
     
     num_rows = len(dfs)
-    fig,ax = plt.subplots(num_rows,2,figsize=(16,4.5*num_rows),
-                          gridspec_kw={'width_ratios': [2.5, 1]})
+    fig,ax = plt.subplots(num_rows,2,figsize=(16,4*num_rows),
+                          gridspec_kw={'width_ratios': [2.25, 1]})
     kts = [2.80,3.00,3.50,4.00]
     for row,df in enumerate(dfs):
         df = df[df.clusterID>0]
         time = np.random.choice(df.timestep.unique())
-        N = len(np.unique(df.timestep))
+        N = len(np.unique(df.tau))
 
 
         kt = kts[row]
@@ -430,14 +430,14 @@ def makePlotMulti_tau(dfs:list,*args,**kwargs)->plt.Axes:
                         ax=ax[row,0],
                         linewidth=0.3)
         ax[row,0].annotate(xy=(0.12,0.06), fontsize =16, 
-                           text=f'Timestep = {time}',
-                           fontweight='bold', style = 'italic',
+                           text=f't = {time}',
+                           fontweight='light', style = 'italic',
                            xycoords='axes fraction')
         #ax[row,0].annotate(xy=(0.12,0.90), fontsize =20, 
          #          text=f'{kt:.1f}kT',
           #         fontweight='bold', style = 'italic',
            #        xycoords='axes fraction')
-        ax[row,0].set_title(f'{kt:.1f}kT',fontweight='light', fontsize=24)
+        # ax[row,0].set_title(f'{kt:.1f}kT',fontweight='light', fontsize=24)
         ax[row,0].set_ylabel('')
         ax[row,0].set_xlabel('')
         ax[row,0].set_xlim([-92,92])
@@ -451,13 +451,13 @@ def makePlotMulti_tau(dfs:list,*args,**kwargs)->plt.Axes:
         ax[row,0].get_legend().remove()
         ax[row,0].figure.colorbar(purples,
                                   ax=ax[row,0],
-                                  location='right',
-                                  shrink=1,
+                                  location='left',
+                                  shrink=0.9,
                                   extend='both',
                                   pad = 0.01,
                                   )
         sns.despine(ax= ax[row,0],left=True,bottom=True)
-
+        sns.despine(ax= ax[row,1])
         #regression  -----------------REGRESSION-----------------------------------
         df_simple = simplify(df)
         sns.regplot(data = df_simple,x='clusterSize',y='tau',
@@ -468,19 +468,19 @@ def makePlotMulti_tau(dfs:list,*args,**kwargs)->plt.Axes:
         #showing pearson r
         ax[row,1].annotate(xy=(0.05,0.90),
                            text=f'r = {r:.2f}',
-                           fontweight='bold',
+                           fontweight='light',
                            style='italic',
                            xycoords='axes fraction')
         
         #showing number of timepoints
-        ax[row,1].annotate(xy=(0.80,0.05),
+        ax[row,1].annotate(xy=(0.75,0.05),
                            text=f'N = {N}',
-                           fontweight='bold',
+                           fontweight='light',
                            style='italic',
                            xycoords='axes fraction')
         
         
-        
+        ax[row,1].tick_params(axis='both',labelsize=14)
         ax[row,1].set_ylabel('Mean Lifetime (a.u.)',fontsize=18)
         ax[row,1].set_xlabel('Cluster Size (#TF)',fontsize=18)
         
@@ -489,7 +489,7 @@ def makePlotMulti_tau(dfs:list,*args,**kwargs)->plt.Axes:
         #plt.annotate('B',xycoords='figure fraction', xy = (0.69,0.95),fontsize=48)
         
         fig.tight_layout()
-        fig.subplots_adjust(wspace=0, hspace=0.25)
+        fig.subplots_adjust(wspace=0, hspace=0.0)
 
     return fig
 
@@ -561,15 +561,13 @@ if __name__ == '__main__':
         
         fig = makePlotMulti_tau(dfs)
 
+        fig.tight_layout()
 
+        # plt.annotate('A',xycoords='figure fraction', xy = (0.023,0.965),fontsize=48)
+        # plt.annotate('B',xycoords='figure fraction', xy = (0.66,0.965),fontsize=48)
 
-        plt.tight_layout()
-
-        plt.annotate('A',xycoords='figure fraction', xy = (0.023,0.965),fontsize=48)
-        plt.annotate('B',xycoords='figure fraction', xy = (0.66,0.965),fontsize=48)
-
-        fig.savefig('../Figures/fig4.pdf',transparent=True)
-        fig.savefig('../Figures/fig4.png', dpi=300, transparent=True)
+        fig.savefig('../Figures/fig4.pdf',transparent=True,bbox_inches='tight')
+        # fig.savefig('../Figures/fig4.png', dpi=300, transparent=True)
         # ax1 = makePlotMulti_surface(dfs)
         # plt.savefig('../SI_Figures/multi_surface.pdf',transparent=True)
 

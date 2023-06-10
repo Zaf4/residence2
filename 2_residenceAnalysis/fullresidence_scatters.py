@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 from rich.progress import track
-import pathlib
+import matplotlib.colors as mcolors
 
 # suppress the warning
 pd.set_option('mode.chained_assignment', None)
@@ -64,42 +64,48 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
     # weights = ((1/(ts*ts[::-1]))*10**5)**2
     tmax = df.timestep.max()
     weights = ts**2-tmax*ts+(tmax/2)**2
+    weights = weights**16/np.sum(weights)
+
+    #sampled data
+    sampled_df = df.sample(frac=0.08,random_state=42,weights=weights)
+    # print(len(sampled_df),len(df))
+
     #scattter plot (Data)------------------------------------------------------
-    sns.scatterplot(data=df.sample(frac=0.25,random_state=42,weights=weights),
+    sns.scatterplot(data=sampled_df,
                     x='timestep',
                     y='value',
                     palette=palette,
                     hue='case',
                     hue_order=cols,
-                    alpha=0.4,
-                    s=60,
+                    alpha=1,
+                    s=75,
                     edgecolor=None, 
                     #linewidth=0.1,
                     ax=ax,
                     **kwargs)
+
+    # Create a darker version of the viridis palette
+    # Get the original viridis color palette
+    viridis_palette = sns.color_palette(palette, as_cmap=True)
+
+    # Create a darker version of the viridis palette
+    darker = sns.color_palette([tuple([min(1, c+0.2) for c in color]) for color in viridis_palette.colors])
+    darker_palette = sns.color_palette(darker,as_cmap=True)[40::50]
+    
+
     #Line plot (Fits)----------------------------------------------------------
     sns.lineplot(data=fits,
                  x='timestep',
                  y='value',
-                 palette=palette,
+                 palette=darker_palette,
                  hue='case',
                  ax=ax,
-                 linewidth=2.5,
-                 linestyle='dashed',
-                 alpha=1, 
+                 linewidth=3.5,
+                 linestyle='solid',
+                 alpha=1,
                  **kwargs)
     
-        #Line plot (Fits)----------------------------------------------------------
-    sns.lineplot(data=fits,
-                 x='timestep',
-                 y='value',
-                 color='black',
-                 hue='case',
-                 ax=ax,
-                 linewidth=2.5,
-                 linestyle='dashed',
-                 alpha=0.3, 
-                 **kwargs)
+
 
 
     #graph settings------------------------------------------------------------
@@ -196,11 +202,8 @@ def generate_fit_graph(datafile:str = './data/durations_minimized.csv',
                 legend = [f'{x[:4]}kT' for x in cols]
                 figname = 'fig2A'
 
-            # plt.legend(legend)
-            # creating folder(if not already there), saving the graph
-            if not os.path.exists('./graphs'):
-                os.mkdir('graphs')
-                
+
+ 
     fig.legend(legend,loc=(0.20,0.92),fontsize=15,markerscale=1.4,
                labelspacing=0.25,edgecolor='k')  
     fig.supxlabel('Duration (a.u.)', fontsize=24,fontweight='light')
@@ -221,4 +224,24 @@ if __name__ == '__main__':
     
     fig = generate_fit_graph(keywords=ums)
     #plt.show()
+    """
+    datafile = './data/durations_minimized.csv'
+    df = pd.read_csv(datafile, index_col=None)
+    df['timestep'] = np.arange(len(df))+1
+    #weight calculation to prevent overcrowding
+    ts = np.array(df.timestep)
+    # weights = ((1/(ts*ts[::-1]))*10**5)**2
+    tmax = df.timestep.max()
+    weights = ts**2-tmax*ts+(tmax/2)**2
+
+    weights = weights**4/np.sum(weights)
+
+    fig,axes = plt.subplots(1,3)
+    print(np.min(weights))
+    sns.lineplot(x=ts,y=weights,ax=axes[0])
+
+    sns.lineplot(x=ts,y=weights**4,ax=axes[1])
     
+    sns.lineplot(x=ts,y=np.log(weights),ax=axes[2])
+    plt.show()
+    """

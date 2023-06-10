@@ -84,7 +84,7 @@ if __name__ == '__main__':
     )
     #plotting section
 
-    fig,axes = plt.subplots(nrows=3,ncols=1,figsize=(8,18))
+    fig,axes = plt.subplots(nrows=3,ncols=1,figsize=(8,20))
 
     #graph by energy
     residuals2boxplot(res_melted,

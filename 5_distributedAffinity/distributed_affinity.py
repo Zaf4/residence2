@@ -12,8 +12,6 @@ from scipy import special
 warnings.filterwarnings('ignore')
 pd.set_option('mode.chained_assignment', None)
 
-
-
 def deleteNaN(y:np.ndarray)->tuple[np.ndarray,np.ndarray]:
     """
     delete NaN parts of the input array and time array opened for it,
@@ -27,25 +25,13 @@ def deleteNaN(y:np.ndarray)->tuple[np.ndarray,np.ndarray]:
     t = t[~np.isnan(val)]
     val = val[~np.isnan(val)]
     
-
     return t,val
-
 
 def double_exp(x,a,b,c,d):
     return a*np.exp(-x*b) + (d)*np.exp(-x*c)
 
 def powerlaw(x,a,b):
 	return a*x**(-b)
-
-def complex_triple(x,a,b,c,d,e,f,cp,kp):
-    return a*np.exp(-x*b) + c*np.exp(-x*d)+e*np.exp(-x*f)+cp*x**(-kp)
-
-def complex_double(x,a,b,c,d,cp,kp):
-    return a*np.exp(-x*b) + c*np.exp(-x*d)+cp*x**(-kp)
-
-def st_exp(x,c,koff,ks):
-        return c*np.exp(x*koff**2/ks)*special.erfc(np.sqrt(x*koff**2/ks))
-
 
 def exp_decay(x,a,b):
     return a*np.exp(-x*b)
@@ -60,7 +46,7 @@ def penta_exp(x,a,b,c,d,e,f,g,h,i,j):
     return a*np.exp(-x*b) + c*np.exp(-x*d)+e*np.exp(-x*f)+g*np.exp(-x*h)+i*np.exp(-x*j)
 
 def value_fit(val:np.ndarray,
-              eq:callable,sigma_w = False)->tuple[np.ndarray,np.ndarray,tuple]:
+              eq:callable,sigma_w:bool = False)->tuple[np.ndarray,np.ndarray,tuple]:
     """
 
     Parameters
@@ -105,7 +91,7 @@ def value_fit(val:np.ndarray,
     
     y_fit = eq(t_range, *popt)#full time length
     y_fit[y_fit<1] = np.nan#too small values to be removed
-    y_fit[y_fit>np.max(val)*1.5] = np.nan#too big values removed
+    y_fit[y_fit>np.max(val)*2] = np.nan#too big values removed
     
     return y_fit,ss_res_norm,popt
 
@@ -230,7 +216,7 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
                     palette=palette,
                     hue='case',
                     hue_order=cols,
-                    alpha=0.6,
+                    alpha=0.7,
                     s=300,
                     edgecolor='white', 
                     linewidth=1.8,
@@ -252,19 +238,15 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
                  **kwargs)
 
     #graph settings------------------------------------------------------------
-    
-    ax.tick_params(axis='both',labelsize=21)
-    # for lh in ax.get_legend().legendHandles:
-    #     lh.set_sizes([300])
         
-
+    ax.tick_params(axis='both',labelsize=24)
     ax.set_yscale('log')
     ax.set_xscale('log')
     ax.set_xlim([0.72, 3.7e3])
     ax.set_ylim([0.5, 1e7])
     #ax.get_legend().remove()
     if j == 0:
-        ax.legend(markerscale=3,fontsize=18)
+        ax.legend(markerscale=4,fontsize=21)
     else:
         ax.get_legend().remove()
 
@@ -311,7 +293,7 @@ if __name__ == '__main__':
     ncol = 3
     fig, axes = plt.subplots(nrow, ncol, figsize=(ncol*7, nrow*6))    
     fig.supxlabel('Duration (a.u.)', fontsize=28,fontweight='light')
-    fig.supylabel('Occurence (n)', fontsize=28,fontweight='light') 
+    # fig.supylabel('Occurence (n)', fontsize=28,fontweight='light',x=0.01) 
     #Unifrom vs Gaussian distro
     uniform = ['1-4kT Uniform', '2-5kT Uniform',]
     gaus = ['1-4kT Normal','2-5kT Normal']
@@ -355,18 +337,11 @@ if __name__ == '__main__':
                             )
             ax.set_xlabel(None)
             ax.set_ylabel(None)
-            #lgnd = plt.legend(['1-4kT','2-5kT'])
-            #lgnd.legendHandles[0]._legmarker.set_markersize(6)
-            #lgnd.legendHandles[1]._legmarker.set_markersize(6)
-            #ax.legend(['1-4kT','2-5kT'],markerscale=1,fontsize=20)
             
-
-
-    fig.tight_layout(w_pad=4,h_pad=2)
-    #plt.legend()
-    plt.annotate('A',xycoords='figure fraction', xy = (0.01,0.95),fontsize=48)
-    plt.annotate('B',xycoords='figure fraction', xy = (0.34,0.95),fontsize=48)
-    plt.annotate('C',xycoords='figure fraction', xy = (0.67,0.95),fontsize=48)
+    fig.tight_layout(w_pad=1,h_pad=1)
+    # plt.annotate('A',xycoords='figure fraction', xy = (0.01,0.95),fontsize=48)
+    # plt.annotate('B',xycoords='figure fraction', xy = (0.34,0.95),fontsize=48)
+    # plt.annotate('C',xycoords='figure fraction', xy = (0.67,0.95),fontsize=48)
     fig.savefig('../Figures/fig6.pdf', transparent=True)
     fig.savefig('../Figures/fig6.png', dpi=300, transparent=True)
 

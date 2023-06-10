@@ -377,11 +377,11 @@ if __name__ == '__main__':
     fig = createFigures()
     plt.tight_layout()
 
-    plt.annotate('A',xycoords='figure fraction', xy = (0.01,0.98),fontsize=64,color='black')
-    plt.annotate('B',xycoords='figure fraction', xy = (0.34,0.98),fontsize=64,color='black')
-    plt.annotate('C',xycoords='figure fraction', xy = (0.67,0.98),fontsize=64,color='black')
+    # plt.annotate('A',xycoords='figure fraction', xy = (0.01,0.98),fontsize=64,color='black')
+    # plt.annotate('B',xycoords='figure fraction', xy = (0.34,0.98),fontsize=64,color='black')
+    # plt.annotate('C',xycoords='figure fraction', xy = (0.67,0.98),fontsize=64,color='black')
     
-    fig.savefig('../Figures/fig3.pdf', transparent=True, bbox_inches='tight')
-    fig.savefig('../Figures/fig3.jpg',transparent=True, bbox_inches='tight',dpi=96)
+    # fig.savefig('../Figures/fig3.pdf', transparent=True, bbox_inches='tight')
+    fig.savefig('../Figures/fig3.png',transparent=True, bbox_inches='tight',dpi=96)
 
     
