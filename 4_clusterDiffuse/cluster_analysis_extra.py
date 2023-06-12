@@ -3,7 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
-
 from rich.progress import track
 
 
@@ -601,8 +600,6 @@ def Rstyle(func:callable,**kwargs)->plt.Axes:
 
 if __name__ == '__main__':
     #changing working directory to current directory name
-    os.chdir(os.path.dirname(__file__))
-
     
     # df = system_cluster_summary('./dump.npy',num_samples=20)
     df = system_cluster_summary('./sampleDumps/dump.npy',num_samples=20)

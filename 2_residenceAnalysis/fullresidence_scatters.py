@@ -190,6 +190,7 @@ def generate_fit_graph(datafile:str = './data/durations_minimized.csv',
                                 i=i, j=j)
 
                 legend = [f'{x[-2:]}µM' for x in cols]
+                
                 figname = 'SI-fig1'
 
             else:
@@ -204,8 +205,8 @@ def generate_fit_graph(datafile:str = './data/durations_minimized.csv',
 
 
  
-    fig.legend(legend,loc=(0.20,0.92),fontsize=15,markerscale=1.4,
-               labelspacing=0.25,edgecolor='k')  
+    # fig.legend(legend,loc=(0.20,0.92),fontsize=15,markerscale=1.4,
+    #            labelspacing=0.25,edgecolor='k')  
     fig.supxlabel('Duration (a.u.)', fontsize=24,fontweight='light')
     fig.supylabel('Occurence (n)', fontsize=24,fontweight='light') 
     plt.tight_layout()
@@ -222,7 +223,8 @@ if __name__ == '__main__':
     ums = ['10','20','40','60']
     kts = ['1.00','2.80','3.00','3.50','4.00']
     
-    fig = generate_fit_graph(keywords=ums)
+    fig = generate_fit_graph(keywords=ums)#fig2
+    fig = generate_fit_graph(keywords=kts)#SI-fig1
     #plt.show()
     """
     datafile = './data/durations_minimized.csv'
