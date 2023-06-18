@@ -126,7 +126,8 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
 
 
 def generate_fit_graph(datafile:str = './data/durations_minimized.csv',
-                       keywords:list[str] = ['10','20','40','60']):
+                       keywords:list[str] = ['10','20','40','60'],
+                       figname:str="noname"):
     """
 
 
@@ -143,6 +144,8 @@ def generate_fit_graph(datafile:str = './data/durations_minimized.csv',
     """
     durations = pd.read_csv(datafile, index_col=None)
     eqnames = ['ED','DED','TED','QED','PED','Powerlaw']
+    #eqnames = ['ED','DED','PED','Powerlaw'] #for smaller figures
+    
     
     nrow, ncol = len(eqnames), len(keywords)
 
@@ -165,7 +168,6 @@ def generate_fit_graph(datafile:str = './data/durations_minimized.csv',
                              sharex=True,sharey=True,
                              figsize=(ncol*4, nrow*3))
 
-    legend,figname = '',''
 
     for i, eqname in track(enumerate(eqnames),total=len(eqnames)):
         for j, keyword in enumerate(keywords):
@@ -189,9 +191,9 @@ def generate_fit_graph(datafile:str = './data/durations_minimized.csv',
                                 palette='mako_r',
                                 i=i, j=j)
 
-                legend = [f'{x[-2:]}µM' for x in cols]
+                # legend = [f'{x[-2:]}µM' for x in cols]
                 
-                figname = 'SI-fig1'
+                
 
             else:
                 scatterit_multi(partial_data, 
@@ -200,13 +202,13 @@ def generate_fit_graph(datafile:str = './data/durations_minimized.csv',
                                 palette='viridis_r',
                                 i=i, j=j)
                 
-                legend = [f'{x[:4]}kT' for x in cols]
-                figname = 'fig2A'
+                # legend = [f'{x[:4]}kT' for x in cols]
+                
 
 
  
     # fig.legend(legend,loc=(0.20,0.92),fontsize=15,markerscale=1.4,
-    #            labelspacing=0.25,edgecolor='k')  
+            #    labelspacing=0.25,edgecolor='k')  
     fig.supxlabel('Duration (a.u.)', fontsize=24,fontweight='light')
     fig.supylabel('Occurence (n)', fontsize=24,fontweight='light') 
     plt.tight_layout()
@@ -223,8 +225,14 @@ if __name__ == '__main__':
     ums = ['10','20','40','60']
     kts = ['1.00','2.80','3.00','3.50','4.00']
     
-    fig = generate_fit_graph(keywords=ums)#fig2
-    fig = generate_fit_graph(keywords=kts)#SI-fig1
+    fig = generate_fit_graph(keywords=ums,figname = 'fig2A')#fig2
+    fig = generate_fit_graph(keywords=kts,figname = 'SI-fig1')#SI-fig1
+
+    # presentation figure
+    # kts_reduced = ['2.80','3.50','4.00']
+    # generate_fit_graph(keywords=kts_reduced,figname='sunu_scatter')
+
+    
     #plt.show()
     """
     datafile = './data/durations_minimized.csv'
