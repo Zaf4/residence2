@@ -12,3 +12,6 @@
 
 #pycaches
 *.pyc
+
+#settings
+.vscode/
