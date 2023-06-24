@@ -97,12 +97,3 @@ if __name__ == '__main__':
     arr = np.array(df.type)
     arr[indexes] = tfarr
     df.type = arr
-        
-    
-    
-    
-    
-    
-    
-    
-    # arr = np.array(df)

@@ -344,6 +344,3 @@ if __name__ == '__main__':
     # plt.annotate('C',xycoords='figure fraction', xy = (0.67,0.95),fontsize=48)
     fig.savefig('../Figures/fig6.pdf', transparent=True)
     fig.savefig('../Figures/fig6.png', dpi=300, transparent=True)
-
-
-
