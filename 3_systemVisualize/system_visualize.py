@@ -63,12 +63,11 @@ def find_cluster(atoms:np.ndarray,
                 arr[j] = np.zeros(num,dtype='float32')
                 ind, = np.where(arr[k] != 0)
                 if np.sum(arr[ind]) == 0:
-                    jump.append(k)
-    
+                    jump.append(k) 
     
     c, = np.where(np.sum(arr,axis=1)>0)
     cluster_arr = arr[c].copy()
-    
+
     cluster_arr[cluster_arr>1] = 1
     cluster_size = np.sum(cluster_arr,axis=1)/3 #3 atoms per protein, 
     cluster_arr = cluster_arr[cluster_size>min_size]
