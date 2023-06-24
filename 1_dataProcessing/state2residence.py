@@ -39,7 +39,7 @@ def state2residence(zipname:os.PathLike='states.npz')->np.ndarray:
     return durations
 
 
-def locations():
+def locations()->tuple[list]:
     """
     Specific locations to this task
 

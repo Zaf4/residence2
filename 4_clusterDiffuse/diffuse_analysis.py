@@ -261,7 +261,25 @@ def addSurface(df:pd.DataFrame)->pd.DataFrame:
     
 def generateDF(dumpfile:os.PathLike='./data/targetDUMP.npy',
                statesfile:os.PathLike='./data/full.npy',
-               timestep=2100,kT:float=1.23):
+               timestep=2100,kT:float=1.23)->pd.DataFrame:
+    """generates a multitime-modified dataframe
+
+    Parameters
+    ----------
+    dumpfile : os.PathLike, optional
+        path/to/dump/file, by default './data/targetDUMP.npy'
+    statesfile : os.PathLike, optional
+        path/to/states/file, by default './data/full.npy'
+    timestep : int, optional
+        timestep label for dataframe, by default 2100
+    kT : float, optional
+        affinity label, by default 1.23
+
+    Returns
+    -------
+    pd.DataFrame
+        _description_
+    """
         
     #load the dump file 3D, 0=timestep,1=atoms,2=attributes (type,x,y,z)
     dump = np.load(dumpfile)
@@ -306,8 +324,17 @@ def multiTimeDF(timesteps:np.ndarray,**kwargs)->pd.DataFrame:
     return df
 
 def makePlot(df:pd.DataFrame,*args,**kwargs)->plt.Axes:
-    """
-    make single row of figures showing clusters and lifetimes
+    """_summary_
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        data
+
+    Returns
+    -------
+    plt.Axes
+        plot ax
     """
     
     # font = 1
@@ -364,6 +391,18 @@ def makePlot(df:pd.DataFrame,*args,**kwargs)->plt.Axes:
     return ax
 
 def simplify(df:pd.DataFrame)->pd.DataFrame:
+    """removes not needed columns and duplicate clusters
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        dataframe
+
+    Returns
+    -------
+    pd.DataFrame
+        modified dataframe
+    """
     
     df = df[['clusterID','residence','clusterSize','timestep','conformation','kT','tau']]
     df = df.drop_duplicates(['clusterID','timestep'])
@@ -373,7 +412,7 @@ def simplify(df:pd.DataFrame)->pd.DataFrame:
 
 
 
-def makePlotMulti_tau(dfs:list,*args,**kwargs)->plt.Axes:
+def makePlotMulti_tau(dfs:list[pd.DataFrame],*args,**kwargs)->plt.Axes:
     """
     takes multiple DataFrames and make multiple rows 
     of figures showing clusters and lifetimes
@@ -386,7 +425,7 @@ def makePlotMulti_tau(dfs:list,*args,**kwargs)->plt.Axes:
     Returns
     -------
     plt.Axes
-        _description_
+        figure
     """
 
     #loading capsid df

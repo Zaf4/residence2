@@ -23,7 +23,7 @@ def data2df(file:os.PathLike)->pd.DataFrame:
     #readinf the fike
     f = open(file,'r')
     lines = f.readlines()
-    f.close()
+    f.close() 
     
     #finding num of atoms
 

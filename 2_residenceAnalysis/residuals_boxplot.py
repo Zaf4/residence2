@@ -11,8 +11,21 @@ info = {'name': '_supylabel', 'x0': 0.1, 'y0': 0.5,
         'ha': 'left', 'va': 'center', 'rotation': 'vertical',
         'rotation_mode': 'anchor'}
 
-def residuals2boxplot(residuals:pd.DataFrame,ax,hue=None,
-                      graphname:str='residuals',palette:str='flare'):
+def residuals2boxplot(residuals:pd.DataFrame,ax:plt.Axes,hue:str=None,
+                      palette:str='flare')->None:
+    """Create boxplots from residuals dataframe
+
+    Parameters
+    ----------
+    residuals : pd.DataFrame
+        residual values
+    ax : plt.Axes
+        current ax
+    hue : str, optional
+        hue, by default None
+    palette : str, optional
+        color palette for the current ax, by default 'flare'
+    """
     
     #upper and lower boundaries for the aesthetics
     upper = 10**np.ceil(np.log10(residuals.value.max())) #upper boundary of boxplot
@@ -26,8 +39,6 @@ def residuals2boxplot(residuals:pd.DataFrame,ax,hue=None,
     'capprops':{'color':'black'}
     
     }
-    
-
     #boxplot for the residual comparison
     sns.boxplot(residuals,y='value',hue = hue,x='variable',
                 palette=palette, saturation=1,linewidth=1.6,ax=ax,
@@ -88,20 +99,17 @@ if __name__ == '__main__':
 
     #graph by energy
     residuals2boxplot(res_melted,
-                      graphname='residuals',
                       hue='energy',
                       palette='viridis_r',
                       ax=axes[2])
     #graph by concentration
     residuals2boxplot(res_melted,
-                      graphname='residuals',
                       hue='concentration',
                       palette='mako_r',
                       ax=axes[1])
     
     #graph by concentration
     residuals2boxplot(res_melted,
-                      graphname='residuals_averaged',
                       palette='husl',
                       hue=None,
                       ax=axes[0])

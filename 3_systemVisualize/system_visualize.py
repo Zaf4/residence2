@@ -2,6 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import seaborn as sns
 
 #clustering algorithm
@@ -123,14 +124,6 @@ def cluster_single_df(frame:pd.DataFrame)->pd.DataFrame:
     ----------
     frame : np.ndarray
         takes a single time point Frame.
-        
-    min_size : int, optional
-        min_size for chunk of molecules to form clusters. 
-        The default is 12.
-        
-    clusterit : bool, optional
-        true->add cluster column to dataframe
-        false->do not cluster column to dataframe
 
     Returns
     -------
@@ -229,7 +222,21 @@ def _modify_scatter(func):
 
 
 @_modify_scatter
-def system_scatter(coor:pd.DataFrame,axes,row,col,**kwargs):
+def system_scatter(coor:pd.DataFrame,axes:plt.Axes,row:int,col:int,**kwargs)->None:
+    """generate a full view of the system
+
+    Parameters
+    ----------
+    coor : pd.DataFrame
+        coordinated dataframe from the datafile
+    axes : plt.Axes
+        axes
+    row : int
+        row of axes
+    col : int
+        column of axes
+        
+    """
     
     font = {'family': 'sans-serif',
             'weight': 'light',
@@ -260,6 +267,21 @@ def system_scatter(coor:pd.DataFrame,axes,row,col,**kwargs):
 
 @_modify_scatter
 def protein_scatter(coor:pd.DataFrame,axes,row,col,**kwargs):
+    """generate a protein view of the system
+
+    Parameters
+    ----------
+    coor : pd.DataFrame
+        coordinated dataframe from the datafile
+    axes : plt.Axes
+        axes
+    row : int
+        row of axes
+    col : int
+        column of axes
+        
+    """
+    
     
     #seperate capsid from others
     coor = addRadius2df(coor)
@@ -278,10 +300,24 @@ def protein_scatter(coor:pd.DataFrame,axes,row,col,**kwargs):
                          edgecolor='k',linewidth=0.4,ax=ax)
 
     
-    return ax
+    return
 
 @_modify_scatter
 def cluster_scatter(coor:pd.DataFrame,axes,row,col,**kwargs):
+    """generate a cluster view of the system
+
+    Parameters
+    ----------
+    coor : pd.DataFrame
+        coordinated dataframe from the datafile
+    axes : plt.Axes
+        axes
+    row : int
+        row of axes
+    col : int
+        column of axes
+        
+    """
     
     #seperate capsid from others
     coor = addRadius2df(coor)
@@ -302,9 +338,21 @@ def cluster_scatter(coor:pd.DataFrame,axes,row,col,**kwargs):
                     edgecolor='k',linewidth=0.4,hue='type',ax=ax)
     ax.set_axis_off()
     
-    return ax
+    return
 
-def Rg(df)->float:
+def Rg(df:pd.DataFrame)->float:
+    """calculates Rg (radius of gyration)
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        data
+
+    Returns
+    -------
+    float
+        Radius of gyration
+    """
     
     dna = df[df.type<3]
     coor = np.array(dna[['x','y','z']])
@@ -317,6 +365,18 @@ def Rg(df)->float:
     return rg
     
 def addRadius2df(df:pd.DataFrame)->pd.DataFrame:
+    """modifies the dataframe by adding radiues
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        dataframe
+
+    Returns
+    -------
+    pd.DataFrame
+        modified dataframe
+    """
     
     r = np.zeros(len(df))
     r[df.type==1] = 50
@@ -329,7 +389,19 @@ def addRadius2df(df:pd.DataFrame)->pd.DataFrame:
     
     return df
     
-def createFigures(cases = [100,280,300,350,400]):
+def create_figures(cases:list[int] = [100,280,300,350,400])->mpl.figure.Figure:
+    """creates all subplots in a figure
+
+    Parameters
+    ----------
+    cases : list[int], optional
+        case keywords, by default [100,280,300,350,400]
+
+    Returns
+    -------
+    fig
+        _description_
+    """
     
     nrow = len(cases)
     sns.set(style='white',
@@ -373,7 +445,7 @@ if __name__ == '__main__':
     #changing working directory to current directory name
     os.chdir(os.path.dirname(__file__))
 
-    fig = createFigures()
+    fig = create_figures()
     plt.tight_layout()
 
     # plt.annotate('A',xycoords='figure fraction', xy = (0.01,0.98),fontsize=64,color='black')

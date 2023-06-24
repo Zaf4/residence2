@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import seaborn as sns
 import os
 from rich.progress import track
@@ -13,21 +14,22 @@ pd.set_option('mode.chained_assignment', None)
 def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
                     i:int, j:int, axes,
                     palette: str, **kwargs) -> None:
-    """
-
+    """generates scatter plot with fits
 
     Parameters
     ----------
     df : pd.DataFrame
-        Main data.
+        Distribution data
     fits : pd.DataFrame
-        Equation fit of the main data.
-
-    Returns
-    -------
-    ax : plot
-        seaborn scatter graph.
-
+        Fit data
+    i : int
+        row of axes
+    j : int
+        column of axes
+    axes : plt.Axes
+        _description_
+    palette : str
+        color palette for the plots
     """
     
     #preprocess raw data and fits for graph------------------------------------
@@ -125,23 +127,27 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
     return
 
 
-def generate_fit_graph(datafile:str = './data/durations_minimized.csv',
+def generate_fit_graph(datafile:os.PathLike = './data/durations_minimized.csv',
                        keywords:list[str] = ['10','20','40','60'],
-                       figname:str="noname"):
-    """
+                       figname:str="noname")->mpl.figure.Figure:
 
-
+    """_summary_
     Parameters
     ----------
-
-    fitfile : str
-        path/to/fitfile.
+    datafile : os.PathLike
+        path/to/datafile
+    keywords : list[str]
+        keyword to look for in column names
+    figname : str
+        figure name to save the file with
 
     Returns
     -------
-    None
-
+    mpl.figure.Figure
+        complete figure
     """
+
+
     durations = pd.read_csv(datafile, index_col=None)
     eqnames = ['ED','DED','TED','QED','PED','Powerlaw']
     #eqnames = ['ED','DED','PED','Powerlaw'] #for smaller figures

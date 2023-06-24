@@ -4,7 +4,6 @@ from scipy.optimize import curve_fit
 import warnings
 import os
 
-
 warnings.filterwarnings('ignore')
 
 def deleteNaN(y:np.ndarray)->tuple[np.ndarray,np.ndarray]:
@@ -61,7 +60,7 @@ def value_fit(val:np.ndarray,eq:callable)->tuple[np.ndarray,np.ndarray,tuple]:
     ss_res_norm : np.ndarray
         Sum of squares of residuals normalized.
     popt : tuple
-
+        fit parameters
     """
     
     t_range = np.arange(len(val))+1
@@ -190,7 +189,6 @@ def equation_fit_save(datafile:os.PathLike)->None:
  
     """
     
-    
     #durations file is read as the main raw data -->preprocessing
     durations = pd.read_csv(datafile,index_col=None)
     durations[durations == 0] = np.nan 
@@ -235,27 +233,12 @@ def equation_fit_save(datafile:os.PathLike)->None:
      
     with open('./data/exponents.csv','w') as file_exp:
         file_exp.write(exponents)
-
                     
-    return popt
+    return 
 
     
 if __name__ == '__main__':
     #changing working directory to current directory name
     os.chdir(os.path.dirname(__file__))
 
-    popt = equation_fit_save('./data/durations.csv')
-
-
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+    equation_fit_save('./data/durations.csv')

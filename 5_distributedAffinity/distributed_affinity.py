@@ -138,7 +138,6 @@ def arr_minimize(arr:np.ndarray,method:str='median')->np.ndarray:
 def df_minimize(df:pd.DataFrame,**kwargs)->pd.DataFrame:
     """
     
-
     Parameters
     ----------
     df : pd.DataFrame
@@ -156,23 +155,24 @@ def df_minimize(df:pd.DataFrame,**kwargs)->pd.DataFrame:
     return df
 
 def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
-                    i:int, j:int, axes,
-                    palette: str, **kwargs):
-    """
-
+                    i:int, j:int, axes:plt.Axes,
+                    palette: str, **kwargs)->None:
+    """subplots of scatters
 
     Parameters
     ----------
     df : pd.DataFrame
-        Main data.
+        distributions
     fits : pd.DataFrame
-        Equation fit of the main data.
-
-    Returns
-    -------
-    ax : plot
-        seaborn scatter graph.
-
+        fits
+    i : int
+        row
+    j : int
+        column
+    axes : plt.Axes
+        axes
+    palette : str
+        color palette of plots
     """
     
     #preprocess raw data and fits for graph------------------------------------

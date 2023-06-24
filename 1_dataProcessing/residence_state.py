@@ -1,4 +1,4 @@
-#dump2arr
+import os
 import numpy as np
 import time
 
@@ -79,7 +79,7 @@ def restate3D(arrPol:np.ndarray,arrMol:np.ndarray,
     
     return state_whole.T #formatting for the following code
 
-def progressbar(step, length, time_elapsed,prefix = "Computing")->None:
+def progressbar(step:int, length:int, time_elapsed:float, prefix:str = "Computing")->None:
 
     per = step/time_elapsed #performance
     remaining = length-step	#remaining steps
@@ -108,7 +108,7 @@ def progressbar(step, length, time_elapsed,prefix = "Computing")->None:
     
     return
 
-def state_all(fname:str='dump.npy',ignore:int=1001)->None:
+def state_all(fname:os.PathLike='dump.npy',ignore:int=1001)->None:
     """
     Creates a '.npz'file (using the dump file)
     storing all the state arrays and saves it.

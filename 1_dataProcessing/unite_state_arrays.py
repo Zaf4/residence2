@@ -2,8 +2,8 @@ import numpy as np
 import os
 
 
-def generateLocations(filename:str,
-                      main_loc:str = '/home/gottar/5x10t'):
+def generateLocations(filename:os.PathLike,
+                      main_loc:os.PathLike = '/home/gottar/5x10t')->list[os.PathLike]:
     
     locations = []
     
@@ -17,7 +17,7 @@ def generateLocations(filename:str,
     return locations
 
 def unite_states(file:os.PathLike,
-                 savename:os.PathLike)->np.ndarray:
+                 savename:os.PathLike)->None:
     
     ns = np.load(file)['ns_state']
     sp = np.load(file)['sp_state']

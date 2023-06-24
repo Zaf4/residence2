@@ -84,7 +84,7 @@ def txt2arr(ftoread: os.PathLike = "dump.main",ignore: int = 0)->np.ndarray:
     print(f'{tof-tos:.1f} Seconds to dump 2 array conversion...')
     return arr
 
-def progressbar(step, length, time_elapsed,prefix = "Computing"):
+def progressbar(step:int, length:int, time_elapsed:float,prefix:str = "Computing"):
 
     per = step/time_elapsed #performance
     remaining = length-step	#remaining steps

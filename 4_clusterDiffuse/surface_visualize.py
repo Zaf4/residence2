@@ -386,7 +386,7 @@ def makePlotMulti_tau(dfs:list,*args,**kwargs)->plt.Axes:
     Returns
     -------
     plt.Axes
-        _description_
+        figure
     """
 
     #loading capsid df
