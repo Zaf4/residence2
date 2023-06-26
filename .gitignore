@@ -1,10 +1,6 @@
 #numpy arrays
 *.npy
 
-#figures
-*.png
-*.jpg
-
 #MD data files
 
 #movies
