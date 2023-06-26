@@ -7,6 +7,9 @@
 # Residence Paper Codes
 ## **Codes for the Residence Behavior Analyis and Plotting**
 
+
+![CLusters and Residences](Figures/SI-fig2.png)
+
 ### ***Preprocessing***
 **0_dataBuild**\
 **1_dataProcessing**
@@ -31,4 +34,3 @@ Saved to Figures Folder
 **5_distirbutedAffinity** 
 * Fig6 (distribute_affinity.py)
 
-![Alt text](https://github.com/Zaf4/residence2/blob/master/Figures/SI-fig2.png)
