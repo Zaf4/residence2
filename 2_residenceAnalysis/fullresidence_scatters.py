@@ -105,71 +105,25 @@ def plot_dfs_facet()->None:
     fits = unite_fits()
     data = pp_durations()
 
-    data
-    
+    data = pd.concat([data,data,data,data,data,data])
+
+    data['equation'] = fits.equation
+
+    data,fits = sample_df(data),sample_df(fits)
 
     ax = (
             ggplot(fits,aes('timestep','value',color='concentration'))+
+                geom_point(data=data)+
                 geom_line()+
                 scale_x_log10(format='g',limits=[0.7,30000])+
                 scale_y_log10(format='g',limits=[0.7,1_000_000])+
                 scale_color_viridis()+
-                theme_classic()+
+                theme_minimal()+
                 facet_grid(x='energy',y='equation')
     )
 
-    ggsave(ax,'sample.svg')
+    ggsave(ax,'sample.html')
 
-
-def generate_fit_graph(datafile:os.PathLike = './data/durations_minimized.csv',
-                       keywords:list[str] = ['10','20','40','60'],
-                       figname:str="noname"):
-
-    """
-    Parameters
-    ----------
-    datafile : os.PathLike
-        path/to/datafile
-    keywords : list[str]
-        keyword to look for in column names
-    figname : str
-        figure name to save the file with
-
-    Returns
-    -------
-    mpl.figure.Figure
-        complete figure
-    """
-
-
-    durations = pd.read_csv(datafile, index_col=None)
-    eqnames = ['ED','DED','TED','QED','PED','Powerlaw']
-    #eqnames = ['ED','DED','PED','Powerlaw'] #for smaller figures
-    timestep = np.arange(len(durations))+1
-    for i, eqname in track(enumerate(eqnames),total=len(eqnames)):
-        fitfile = f'./data/{eqname}.csv'
-        fits = pd.read_csv(fitfile, index_col=None)
-        for j, keyword in enumerate(keywords):
-
-            # columns wtih the keyword
-            cols = [x for x in durations if keyword in x]
-            data = durations[cols]
-            fit = fits[cols]
-
-            data['timestep'],fit['timestep'] = timestep,timestep
-
-            data =melt_df(sample_df(data))
-            fit = melt_df(sample_df(fit))
-
-            if '.' in keyword:  # if for energy
-                ax = plot_df(data, fit)
-            else:
-                ax =plot_df(data, fit)
-                
-                # legend = [f'{x[:4]}kT' for x in cols]
-                
-        ggsave(ax,figname)
-        ax=""
     return
 
 
@@ -177,36 +131,3 @@ if __name__ == '__main__':
     #changing working directory to current directory name
     os.chdir(os.path.dirname(__file__))
     plot_dfs_facet()
-    # ums = ['10','20','40','60']
-    # kts = ['1.00','2.80','3.00','3.50','4.00']
-    
-    # fig = generate_fit_graph(keywords=ums,figname = 'fig2A-lp.svg')#fig2
-    # fig = generate_fit_graph(keywords=kts,figname = 'SI-fig1-lp.svg')#SI-fig1
-
-    # presentation figure
-    # kts_reduced = ['2.80','3.50','4.00']
-    # generate_fit_graph(keywords=kts_reduced,figname='sunu_scatter')
-
-    
-    #plt.show()
-    """
-    datafile = './data/durations_minimized.csv'
-    df = pd.read_csv(datafile, index_col=None)
-    df['timestep'] = np.arange(len(df))+1
-    #weight calculation to prevent overcrowding
-    ts = np.array(df.timestep)
-    # weights = ((1/(ts*ts[::-1]))*10**5)**2
-    tmax = df.timestep.max()
-    weights = ts**2-tmax*ts+(tmax/2)**2
-
-    weights = weights**4/np.sum(weights)
-
-    fig,axes = plt.subplots(1,3)
-    print(np.min(weights))
-    sns.lineplot(x=ts,y=weights,ax=axes[0])
-
-    sns.lineplot(x=ts,y=weights**4,ax=axes[1])
-    
-    sns.lineplot(x=ts,y=np.log(weights),ax=axes[2])
-    plt.show()
-    """
