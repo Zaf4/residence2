@@ -145,4 +145,3 @@ sns.despine(trim=True)
 
 fig.savefig('../Figures/fig5.pdf',transparent=True,bbox_inches='tight')
 fig.savefig('../../res_figs/raws/fig5.pdf',transparent=True,bbox_inches='tight')
-# fig.savefig('../Figures/fig5.png',transparent=True,dpi=300)
