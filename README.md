@@ -22,17 +22,17 @@ Saved to Figures Folder
 
 **2_residenceAnalysis** 
 * [Fig2A](2_residenceAnalysis/fullresidence_scatters.py)
-* [Fig2B](2_residenceAnalysis/residual_boxplot.py)
+* [Fig2B](2_residenceAnalysis/residuals_boxplot.py)
 * [SI-Fig1](2_residenceAnalysis/fullresidence_scatters.py)
 
 **3_systemVisualize**  
-* [Fig3](3_systemVisualize\system_visualize.py)
+* [Fig3](3_systemVisualize/system_visualize.py)
 
 **4_clusterDiffuse**
-* [Fig4](4_clusterDiffuse\diffuse_analysis.py)
-* [Fig5](4_clusterDiffuse\surface_analysis.py)
-* [SI-Fig2](4_clusterDiffuse\surface_visualize.py)
+* [Fig4](4_clusterDiffuse/diffuse_analysis.py)
+* [Fig5](4_clusterDiffuse/surface_analysis.py)
+* [SI-Fig2](4_clusterDiffuse/surface_visualize.py)
 
 **5_distributedAffinity** 
-* [Fig6](5_distributedAffinity\distributed_affinity.py)
+* [Fig6](5_distributedAffinity/distributed_affinity.py)
 
