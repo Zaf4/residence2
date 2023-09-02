@@ -35,7 +35,7 @@ mapping = {
 #font parameters
 fontparams = {         
               'fontweight':'light',
-              'fontsize':20,
+              'fontsize':19,
               'fontname':'Sans Serif',
 
               }
@@ -44,7 +44,7 @@ fontparams = {
 sns.set_theme(style='ticks',
     rc = {
           'font.weight':'light',
-          'font.size':20,
+          'font.size':18,
           'font.family':'Sans Serif',
           'ytick.minor.size':'0',
           'ytick.major.size':'10',
@@ -54,8 +54,8 @@ sns.set_theme(style='ticks',
     )
 
 #Initing multiplot
-fig, axes = plt.subplots(2,4,figsize=(20,8),)
-fig.subplots_adjust(wspace=0.2, hspace=0.4)
+fig, axes = plt.subplots(2,4,figsize=(18,8),)
+fig.subplots_adjust(wspace=0.3, hspace=0.45)
 
 for i,df in enumerate(dfs):
     
@@ -107,28 +107,34 @@ for i,df in enumerate(dfs):
                                   loc="outside",
                                   width=1,
                                   color='0.4',
-                                  line_height=0.01,
-                                  text_offset=0.1,
-                                  fontsize='small')
+                                  line_height=0.04,
+                                  text_offset=0,
+                                  fontsize='small',
+                                  verbose=0)
 
     
     #graph settings------------------------------------------------------------
     for j in range(2):
         ax = axes[j,i]
         ax.set_xlabel(None)
-        ax.set_ylabel('Residence Time (a.u.)',**fontparams)
+        if i == 0:
+            ax.set_ylabel('Residence Time (a.u.)',**fontparams)
+        else:
+            ax.set_ylabel('')
         ax.set_xticks([0, 1, 2])
         ax.set_xticklabels(['Free', 'Surface', 'Core'],
-                            fontsize=22,fontweight='light')
+                            fontsize=18,fontweight='light')
         
         ax.tick_params(axis='y',
                        labelsize=18)
-    
+
+        y = 0.95 if j == 1 else 1.08
         ax.set_title(r'$U_{ns} = $' + f'{kts[i]}kT',
                      fontsize=20,
                      style='italic',
                      fontweight='light',
-                     fontname='Arial')
+                     fontname='Arial',
+                     y=y)
         
         if j==0:
             lower,upper = ax.get_ylim()
@@ -137,11 +143,6 @@ for i,df in enumerate(dfs):
 #overall figure setting and saving
 sns.despine(trim=True)
 
-plt.tight_layout()
-
-# plt.annotate('A',xycoords='figure fraction', xy = (0.01,0.93),fontsize=48)
-# plt.annotate('B',xycoords='figure fraction', xy = (0.01,0.45),fontsize=48)
-
-
-fig.savefig('../Figures/fig5.pdf',transparent=True)
-fig.savefig('../Figures/fig5.png',transparent=True,dpi=300)
+fig.savefig('../Figures/fig5.pdf',transparent=True,bbox_inches='tight')
+fig.savefig('../../res_figs/raws/fig5.pdf',transparent=True,bbox_inches='tight')
+# fig.savefig('../Figures/fig5.png',transparent=True,dpi=300)
