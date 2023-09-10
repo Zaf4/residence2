@@ -33,11 +33,10 @@ def residuals2boxplot(residuals:pd.DataFrame,ax:plt.Axes,hue:str=None,
     
     #kwargs for the boxplot
     props = {
-    'boxprops':{'edgecolor':'black'},
-    'medianprops':{'color':'black'},
-    'whiskerprops':{'color':'black'},
-    'capprops':{'color':'black'}
-    
+    'boxprops':{'edgecolor':'#333333','linewidth': 2},
+    'medianprops':{'color':'#333333','linewidth': 2},
+    'whiskerprops':{'color':'#333333','linewidth': 2},
+    'capprops':{'color':'#333333','linewidth': 2},
     }
     #boxplot for the residual comparison
     sns.boxplot(residuals,y='value',hue = hue,x='variable',
@@ -72,7 +71,7 @@ if __name__ == '__main__':
     
     #melting the dataframe
     res_melted = pd.melt(residuals,
-                         value_vars=['ED','DED','TED','QED','PED','Powerlaw'],
+                         value_vars=['ED','DED','TED','QED','PED','Power-law'],
                          id_vars=['energy','concentration'])
     
     #plot settings

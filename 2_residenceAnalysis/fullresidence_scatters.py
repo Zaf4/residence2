@@ -65,11 +65,11 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
     ts = np.array(df.timestep)
     # weights = ((1/(ts*ts[::-1]))*10**5)**2
     tmax = df.timestep.max()
-    weights = ts**2-tmax*ts+(tmax/2)**2
-    weights = weights**16/np.sum(weights)
+    weights = np.abs(ts-tmax/2)
+    weights = 10**(weights/tmax)**2
 
     #sampled data
-    sampled_df = df.sample(frac=0.08,random_state=42,weights=weights)
+    sampled_df = df.sample(frac=0.25,random_state=42,weights=weights)
     # print(len(sampled_df),len(df))
 
     #scattter plot (Data)------------------------------------------------------
@@ -80,9 +80,9 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
                     hue='case',
                     hue_order=cols,
                     alpha=1,
-                    s=75,
-                    edgecolor=None, 
-                    #linewidth=0.1,
+                    s=200,
+                    edgecolor='white', 
+                    linewidth=0.15,
                     ax=ax,
                     **kwargs)
 
@@ -164,8 +164,8 @@ def generate_fit_graph(datafile:os.PathLike = './data/durations_minimized.csv',
                 'axes.spines.right': 'False',
                 'ytick.minor.size': '0',
                 'xtick.minor.size': '0',
-                'ytick.major.size': '10',
-                'xtick.major.size': '10',
+                'ytick.major.size': '5',
+                'xtick.major.size': '5',
                 'legend.frameon': False
                 }
             )
