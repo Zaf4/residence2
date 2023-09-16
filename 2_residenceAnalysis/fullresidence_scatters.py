@@ -49,11 +49,9 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
                  var_name='case',
                  value_name='value')
     
-    ax = axes[i,j]
+    # df.dropna(axis=0,inplace=True)
 
-    # resetting indexes
-    df.index = np.arange(len(df))+1
-    fits.index = np.arange(len(df))+1
+    ax = axes[i,j]
 
     #font settings
     font = {'family': 'Sans Serif',
@@ -70,7 +68,6 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
 
     #sampled data
     sampled_df = df.sample(frac=0.25,random_state=42,weights=weights)
-    # print(len(sampled_df),len(df))
 
     #scattter plot (Data)------------------------------------------------------
     sns.scatterplot(data=sampled_df,
@@ -80,20 +77,19 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
                     hue='case',
                     hue_order=cols,
                     alpha=1,
-                    s=200,
+                    s=300,
                     edgecolor='white', 
-                    linewidth=0.15,
+                    linewidth=0.2,
                     ax=ax,
                     **kwargs)
 
     # Create a darker version of the viridis palette
-    # Get the original viridis color palette
-    viridis_palette = sns.color_palette(palette, as_cmap=True)
+    
+    viridis_palette = sns.color_palette(palette, as_cmap=True)# Get the original viridis color palette
 
     # Create a darker version of the viridis palette
     darker = sns.color_palette([tuple([min(1, c+0.2) for c in color]) for color in viridis_palette.colors])
     darker_palette = sns.color_palette(darker,as_cmap=True)[40::50]
-    
 
     #Line plot (Fits)----------------------------------------------------------
     sns.lineplot(data=fits,
@@ -107,8 +103,6 @@ def scatterit_multi(df: pd.DataFrame, fits: pd.DataFrame,
                  alpha=1,
                  **kwargs)
     
-
-
 
     #graph settings------------------------------------------------------------
     
@@ -233,31 +227,3 @@ if __name__ == '__main__':
     
     fig = generate_fit_graph(keywords=ums,figname = 'fig2A')#fig2
     fig = generate_fit_graph(keywords=kts,figname = 'SI-fig1')#SI-fig1
-
-    # presentation figure
-    # kts_reduced = ['2.80','3.50','4.00']
-    # generate_fit_graph(keywords=kts_reduced,figname='sunu_scatter')
-
-    
-    #plt.show()
-    """
-    datafile = './data/durations_minimized.csv'
-    df = pd.read_csv(datafile, index_col=None)
-    df['timestep'] = np.arange(len(df))+1
-    #weight calculation to prevent overcrowding
-    ts = np.array(df.timestep)
-    # weights = ((1/(ts*ts[::-1]))*10**5)**2
-    tmax = df.timestep.max()
-    weights = ts**2-tmax*ts+(tmax/2)**2
-
-    weights = weights**4/np.sum(weights)
-
-    fig,axes = plt.subplots(1,3)
-    print(np.min(weights))
-    sns.lineplot(x=ts,y=weights,ax=axes[0])
-
-    sns.lineplot(x=ts,y=weights**4,ax=axes[1])
-    
-    sns.lineplot(x=ts,y=np.log(weights),ax=axes[2])
-    plt.show()
-    """

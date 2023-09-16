@@ -6,8 +6,10 @@ from scipy import stats
 import statannot
 import os
 
+
 #changing working directory to current directory name
 os.chdir(os.path.dirname(__file__))
+
 
 def round_up(value:float|int):
     n_digits = len(str(int(value)))
@@ -77,8 +79,14 @@ for i,df in enumerate(dfs):
                   errcolor='k', errwidth=1.5, capsize=0.3)
     
 
-    #Swarmplot-----------------------------------------------------------------
+    #tf ratios
+    N = len(df)
+    ratio_surf = round(len(df[df.kind=='surf'])/N*100)
+    ratio_free = round(len(df[df.kind=='free'])/N*100)
+    ratio_core = round(len(df[df.kind=='core'])/N*100)
 
+    #Swarmplot-----------------------------------------------------------------
+    # 0.12
     swarm_data = df.sample(frac=0.12,random_state = 42,weights=df.residence**2)
     sns.swarmplot(data=swarm_data,
                   x='kind',y='residence',
@@ -124,7 +132,11 @@ for i,df in enumerate(dfs):
         ax.set_xticks([0, 1, 2])
         ax.set_xticklabels(['Free', 'Surface', 'Core'],
                             fontsize=18,fontweight='light')
-        
+        """
+        if j == 1:
+            ax.annotate(text=f'{Fore.RED}{ratio_free}{Style.RESET_ALL}:{Fore.RED}{ratio_surf}{Style.RESET_ALL}:{Fore.RED}{ratio_core}{Style.RESET_ALL}%',
+                        xycoords="axes fraction",xy=(0.3,0.8),fontsize=15)"""
+
         ax.tick_params(axis='y',
                        labelsize=18)
 
