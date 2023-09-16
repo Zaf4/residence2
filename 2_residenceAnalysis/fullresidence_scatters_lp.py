@@ -72,7 +72,7 @@ def unite_fits(eqnames:str = ['ED','DED','TED','QED','PED','Powerlaw'])->pd.Data
         fits['timestep'] = np.arange(len(fits))+1
 
         #melting
-        fits = pd.melt(fits,id_vars='timestep',var_name='case',value_name='value')
+        fits = melt_df(fits)
 
         # adding new equation,energy,concentration columns
         fits['equation'] = [eqname]*len(fits)
@@ -127,7 +127,20 @@ def plot_dfs_facet()->None:
     return
 
 
-if __name__ == '__main__':
+def main(option:str="save"):
     #changing working directory to current directory name
     os.chdir(os.path.dirname(__file__))
-    plot_dfs_facet()
+
+    if option == "save":
+        fits_full = unite_fits().reset_index(drop=True)
+        data_full = pp_durations().reset_index(drop=True)
+        data_full['equation'] = fits_full.equation
+
+        data_full.dropna().to_parquet("./data/durations_melted.parquet", index=False)
+        fits_full.dropna().to_parquet("./data/fits_melted.parquet", index=False)
+
+    elif option == "plot":
+        plot_dfs_facet()
+
+if __name__ == '__main__':
+    main()
