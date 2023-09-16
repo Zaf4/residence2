@@ -7,7 +7,7 @@ import os
 
 
 # docstring from _suplabels...
-info = {'name': '_supylabel', 'x0': 0.1, 'y0': 0.5,
+info = {'name': '_supylabel', 'x0': -.2, 'y0': 0.5,
         'ha': 'left', 'va': 'center', 'rotation': 'vertical',
         'rotation_mode': 'anchor'}
 
@@ -50,7 +50,7 @@ def residuals2boxplot(residuals:pd.DataFrame,ax:plt.Axes,hue:str=None,
     ax.set_ylim([lower,upper])
     ax.tick_params(axis='x',labelsize=20,rotation=30)
     ax.tick_params(axis='y',labelsize=22)
-    
+
 
     # plt.close()
     return
@@ -114,7 +114,7 @@ if __name__ == '__main__':
                       hue=None,
                       ax=axes[0])
     
-    fig.supylabel('Normalized Residual Sum of Squares',fontsize=24,fontfamily='sans-serif',x=-0.02)
+    fig.supylabel('Normalized Residual Sum of Squares',fontsize=24,fontfamily='sans-serif',x=0)
     
     ##saving the figure
     fig.savefig('../Figures/fig2B.pdf',
