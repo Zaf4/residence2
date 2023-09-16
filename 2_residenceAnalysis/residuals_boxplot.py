@@ -74,6 +74,7 @@ if __name__ == '__main__':
                          value_vars=['ED','DED','TED','QED','PED','Power-law'],
                          id_vars=['energy','concentration'])
     
+    res_melted.to_parquet("./data/residuals_melted.parquet", index=False)
     #plot settings
     sns.set(style='ticks',
     rc = {
