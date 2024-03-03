@@ -7,7 +7,7 @@ authors = [
     {name = "Zafer Kosar"}
 ]
 maintainers = [
-    {name = "Zafer Kosar", email = "zafermolbio@gmail.com"},
+    {name = "Zafer Kosar", email = "zafermolbio@gmail.com"}
 ]
 
 readme = {file = "README.md", content-type="text/markdown"}
@@ -25,15 +25,14 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-
+    "Programming Language :: Python :: 3.12"
 ]
 
 dependencies = [
-    'numpy',
-    'scipy',
-    'statannot',
-    'pandas >= 1.5.0, < 2',
-    'seaborn >= 0.12.0',
-    'matplotlib >= 3.6.0',
-    
+    "numpy ",
+    "scipy",
+    "statannot",
+    "pandas >= 1.5.0, < 2",
+    "seaborn >= 0.12.0",
+    "matplotlib >= 3.6.0"
 ]
