@@ -63,7 +63,7 @@ def data2df(file:os.PathLike)->pd.DataFrame:
     return df_atoms
 
 
-coor = data2df(f'./data/data280.extra')
+coor = data2df('./data/data280.extra')
 capsid = coor[coor.type==6]
 
 #reduce capsid to 2d (xy)
