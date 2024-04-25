@@ -68,6 +68,31 @@ p20 = gggrid([p3,p4])+ggsize(1600,800)
 p20.to_html("figures/exponents_by_equation.html") 
 
 
+# Plot the data
+p5 = (
+    ggplot(df_tau, aes(x='energy', y='value', fill='concentration'))+
+    geom_bar(color='black',stat='identity', position='dodge')+
+    scale_fill_hue()+
+    ylab('Tau')+
+    xlab('Equation')+
+    scale_y_log2()+
+    theme(exponent_format='pow')
+    )
+
+
+# Plot the data
+p6 = (
+    ggplot(df_coeff, aes(x='energy', y='value', fill='concentration'))+
+    geom_bar(color='black',stat='identity', position='dodge')+
+    scale_fill_viridis()+
+    ylab('Coefficient')+
+    xlab('Equation')+
+    scale_y_log2()
+)
+
+p20 = gggrid([p5,p6])+ggsize(1600,800)
+p20.to_html("figures/exponents_by_kT.html") 
+
 if __name__ == "__main__":
     # Load data
     #changing working directory to current directory name
