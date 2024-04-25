@@ -38,9 +38,34 @@ p2 = (
     scale_y_log2()
     
     )
-p = gggrid([p1,p2])+ggsize(1600,800)
-p.to_html("exponents.html")
+p10 = gggrid([p1,p2])+ggsize(1600,800)
+p10.to_html("figures/exponents_by_um.html")
 
+
+# Plot the data
+p3 = (
+    ggplot(df_tau, aes(x='equation', y='value', fill='energy'))+
+    geom_bar(color='black',stat='identity', position='dodge')+
+    scale_fill_hue()+
+    ylab('Tau')+
+    xlab('Equation')+
+    scale_y_log2()+
+    theme(exponent_format='pow')
+    )
+
+
+# Plot the data
+p4 = (
+    ggplot(df_coeff, aes(x='equation', y='value', fill='energy'))+
+    geom_bar(color='black',stat='identity', position='dodge')+
+    scale_fill_viridis()+
+    ylab('Coefficient')+
+    xlab('Equation')+
+    scale_y_log2()
+)
+
+p20 = gggrid([p3,p4])+ggsize(1600,800)
+p20.to_html("figures/exponents_by_equation.html") 
 
 
 if __name__ == "__main__":
