@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy.optimize import curve_fit
+from scipy.special import erfc
 import warnings
 import os
 
@@ -23,15 +24,11 @@ def deleteNaN(y:np.ndarray)->tuple[np.ndarray,np.ndarray]:
     return t,val
 
 
-def double_exp(x,a,b,c,d):
-    return a*np.exp(-x*b) + (d)*np.exp(-x*c)
-
-def powerlaw(x,a,b):
-	return a*x**(-b)
-
-
 def exp_decay(x,a,b):
     return a*np.exp(-x*b)
+
+def double_exp(x,a,b,c,d):
+    return a*np.exp(-x*b) + (d)*np.exp(-x*c)
 
 def tri_exp(x,a,b,c,d,e,f):
     return a*np.exp(-x*b) + c*np.exp(-x*d)+e*np.exp(-x*f)
@@ -41,6 +38,13 @@ def quad_exp(x,a,b,c,d,e,f,g,h):
 
 def penta_exp(x,a,b,c,d,e,f,g,h,i,j):
     return a*np.exp(-x*b) + c*np.exp(-x*d)+e*np.exp(-x*f)+g*np.exp(-x*h)+i*np.exp(-x*j)
+
+def powerlaw(x,a,b):
+	return a*x**(-b)
+
+def erfc_exp(x,a,b):
+    return a*erfc(b*x)
+
 
 def value_fit(val:np.ndarray,eq:callable)->tuple[np.ndarray,np.ndarray,tuple]:
     """
