@@ -145,6 +145,7 @@ def generate_fit_graph(datafile:os.PathLike = './data/durations_minimized.csv',
     durations = pd.read_csv(datafile, index_col=None)
     eqnames = ['ED','DED','TED','QED','PED','Powerlaw']
     #eqnames = ['ED','DED','PED','Powerlaw'] #for smaller figures
+    eqnames.append('ERFC')
     
     
     nrow, ncol = len(eqnames), len(keywords)

@@ -4,6 +4,7 @@ from scipy.optimize import curve_fit
 from scipy.special import erfc
 import warnings
 import os
+from tqdm import tqdm
 
 warnings.filterwarnings('ignore')
 
@@ -43,7 +44,7 @@ def powerlaw(x,a,b):
 	return a*x**(-b)
 
 def erfc_exp(x,a,b):
-    return a*erfc(b*x)
+    return a*np.exp(-x*b)*erfc(np.sqrt(np.abs(x*b)))
 
 
 def value_fit(val:np.ndarray,eq:callable)->tuple[np.ndarray,np.ndarray,tuple]:
@@ -201,13 +202,16 @@ def equation_fit_save(datafile:os.PathLike)->None:
     
     #names and functions are listed for the for loop
     eqnames = ['ED','DED','TED','QED','PED','Powerlaw']
+    eqnames.append('ERFC')
+    
     equations = [exp_decay,double_exp,tri_exp,quad_exp,penta_exp,powerlaw]
+    equations.append(erfc_exp)
 
     #initing residuals dataframe
     exponents = 'equation,energy,concentration,'
     exponents+= ','.join([f'coeff{i+1},tau{i+1}' for i in range(5)])+'\n'
     residues = pd.DataFrame()
-    for name,equation in zip(eqnames,equations):
+    for name,equation in tqdm(zip(eqnames,equations)):
 
         fits = pd.DataFrame() #a fit data frame is opened for each equation
         ress = np.zeros([20]) #array to store residual values
