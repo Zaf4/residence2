@@ -1,8 +1,10 @@
-import numpy as np
+import os
+
 import pandas as pd
 from lets_plot import *
+
 LetsPlot.setup_html()
-import os
+
 
 # Load data and melt the dataframe
 df = pd.read_csv("data/exponents.csv", encoding='ISO-8859-1')
