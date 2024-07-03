@@ -70,7 +70,7 @@ def value_fit(val:np.ndarray,eq:callable)->tuple[np.ndarray,np.ndarray,tuple]:
     
     t_range = np.arange(len(val))+1
     
-    residual_t = np.zeros([len(val),2])
+    # residual_t = np.zeros([len(val),2])
     
     t,val = deleteNaN(val)
     
