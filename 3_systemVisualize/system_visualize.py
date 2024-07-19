@@ -122,7 +122,7 @@ def cluster_single_df(frame:pd.DataFrame)->pd.DataFrame:
 
     Parameters
     ----------
-    frame : np.ndarray
+    frame :pd.DataFrame
         takes a single time point Frame.
 
     Returns
