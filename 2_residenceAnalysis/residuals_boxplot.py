@@ -70,7 +70,7 @@ if __name__ == '__main__':
     residuals['concentration'] = ums
     
     # drop power-law
-    residuals = residuals.drop(['Power-law','ERFC'],axis="columns")
+    residuals = residuals.drop(['Powerlaw','ERFC'],axis="columns")
     #melting the dataframe
     res_melted = pd.melt(residuals,
                          value_vars=['ED','DED','TED','QED','PED'],

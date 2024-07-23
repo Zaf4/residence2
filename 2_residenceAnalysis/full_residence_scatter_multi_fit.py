@@ -242,5 +242,5 @@ if __name__ == "__main__":
 
     ums = ["10", "60"]
     kts = [ "2.80", "3.50", "4.00"]
-    figname = "full_residence_scatter_multi_fit"
-    generate_fit_graph_multi_func(concentrations=ums, kts=kts, figname=figname)
+    
+    generate_fit_graph_multi_func(concentrations=ums, kts=kts, figname = "fig2A")
