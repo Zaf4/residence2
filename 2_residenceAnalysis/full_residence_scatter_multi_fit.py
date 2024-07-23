@@ -109,7 +109,7 @@ def scatterit_multi_func(
         alpha=1,
         s=300,
         edgecolor="black",
-        linewidth=0.2,
+        linewidth=0.5,
         ax=ax,
         **kwargs,
     )
@@ -157,8 +157,8 @@ def scatterit_multi_func(
     #ax.get_legend().remove()
     ax.set_yscale("log")
     ax.set_xscale("log")
-    ax.set_xlim([0.72, 3.7e3])
-    ax.set_ylim([0.5, 1e6])
+    ax.set_xlim([0.72, 3.85e3])
+    ax.set_ylim([0.5, 1.15e6])
     ax.set_xlabel(None)
     ax.set_ylabel(None)
 

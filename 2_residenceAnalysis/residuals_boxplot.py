@@ -69,9 +69,11 @@ if __name__ == '__main__':
     residuals['energy'] = kts
     residuals['concentration'] = ums
     
+    # drop power-law
+    residuals = residuals.drop(['Power-law','ERFC'],axis="columns")
     #melting the dataframe
     res_melted = pd.melt(residuals,
-                         value_vars=['ED','DED','TED','QED','PED','Power-law'],
+                         value_vars=['ED','DED','TED','QED','PED'],
                          id_vars=['energy','concentration'])
     
     res_melted.to_parquet("./data/residuals_melted.parquet", index=False)
