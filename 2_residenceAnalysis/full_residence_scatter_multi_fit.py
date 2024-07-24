@@ -8,6 +8,7 @@ import pandas as pd
 import seaborn as sns
 from rich.progress import track
 import warnings
+
 warnings.filterwarnings("ignore", message="The palette list has more values")
 
 
@@ -21,7 +22,7 @@ def sample_ends_favored(df: pd.DataFrame, n: int = 10) -> pd.DataFrame:
     Parameters
     ----------
     df : pd.DataFrame
-    
+
     n : int, optional
         end size, by default 10
 
@@ -30,8 +31,6 @@ def sample_ends_favored(df: pd.DataFrame, n: int = 10) -> pd.DataFrame:
     pd.DataFrame
         sampled dataframe
     """
-
-
 
     df = df.dropna(axis=0)
 
@@ -42,13 +41,19 @@ def sample_ends_favored(df: pd.DataFrame, n: int = 10) -> pd.DataFrame:
     weights = np.abs(ts - tmax / 2)
     weights = 10 ** (weights / tmax) ** 2
     sampled_df = pd.concat(
-        [df.head(n), df.sample(frac=0.20, random_state=42,weights=weights), df.tail(n)]
+        [df.head(n), df.sample(frac=0.20, random_state=42, weights=weights), df.tail(n)]
     )
     return sampled_df
 
 
 def scatterit_multi_func(
-    df: pd.DataFrame, fits_list: list[pd.DataFrame], i: int, j: int, axes, palette: str, **kwargs
+    df: pd.DataFrame,
+    fits_list: list[pd.DataFrame],
+    i: int,
+    j: int,
+    axes,
+    palette: str,
+    **kwargs,
 ) -> None:
     """generates scatter plot with fits from multiple functions
 
@@ -102,9 +107,9 @@ def scatterit_multi_func(
         data=sampled_df,
         x="timestep",
         y="value",
-        #palette=palette,
-        #hue="case",
-        #hue_order=cols,
+        # palette=palette,
+        # hue="case",
+        # hue_order=cols,
         color="white",
         alpha=1,
         s=300,
@@ -124,19 +129,22 @@ def scatterit_multi_func(
     # darker = sns.color_palette(
     #     [tuple([min(1, c + 0.2) for c in color]) for color in viridis_palette.colors]
     # )
-    #darker_palette = sns.color_palette(darker, as_cmap=True)[40::50]
+    # darker_palette = sns.color_palette(darker, as_cmap=True)[40::50]
 
     annotated_fit_list = list()
     for fits in fits_list:
         # Line plot (Fits)----------------------------------------------------------
         fits["timestep"] = np.arange(len(df)) + 1
         fits = pd.melt(
-        fits, id_vars=["timestep","equation"], value_vars=cols, var_name="case", value_name="value"
+            fits,
+            id_vars=["timestep", "equation"],
+            value_vars=cols,
+            var_name="case",
+            value_name="value",
         )
         annotated_fit_list.append(fits)
 
     fits = pd.concat(annotated_fit_list, axis=0, ignore_index=True)
-    print(fits.head())
 
     sns.lineplot(
         data=fits,
@@ -154,7 +162,7 @@ def scatterit_multi_func(
     # graph settings------------------------------------------------------------
 
     ax.tick_params(axis="both", labelsize=21)
-    #ax.get_legend().remove()
+    ax.get_legend().remove()
     ax.set_yscale("log")
     ax.set_xscale("log")
     ax.set_xlim([0.72, 3.85e3])
@@ -172,12 +180,11 @@ def generate_fit_graph_multi_func(
     datafile: os.PathLike = "./data/durations_minimized.csv",
     concentrations: list[str] = ["10", "20", "40", "60"],
     kts: list[str] = ["1.00", "2.80", "3.00", "3.50", "4.00"],
+    eqnames=["ED", "DED", "PED", "Powerlaw"],  # for smaller figures
     figname: str = "noname",
 ) -> mpl.figure.Figure:
-    
     durations = pd.read_csv(datafile, index_col=None)
     # eqnames = ["ED", "DED", "TED", "QED", "PED", "Powerlaw", "ERFC"]
-    eqnames = ['ED','DED','PED','Powerlaw'] #for smaller figures
 
     nrow, ncol = len(kts), len(concentrations)
 
@@ -198,17 +205,15 @@ def generate_fit_graph_multi_func(
     )
 
     fig, axes = plt.subplots(
-    nrow, ncol, sharex=True, sharey=True, figsize=(ncol * 4, nrow * 3)
+        nrow, ncol, sharex=True, sharey=True, figsize=(ncol * 4, nrow * 3)
     )
 
-    for i, kt in track(enumerate(kts)):
+    for i, kt in track(enumerate(kts), total=len(kts)):
         for j, conc in enumerate(concentrations):
-            
-
             # columns wtih the keyword
             cols = [x for x in durations if kt in x and conc in x]
             print(f"Concentration: {conc}, kT: {kt}, Columns: {cols}")
-            
+
             partial_data = durations[cols]
             # collecting fit dataframes
             fit_list = list()
@@ -223,24 +228,27 @@ def generate_fit_graph_multi_func(
                 partial_data, fit_list, axes=axes, palette="magma", i=i, j=j
             )
 
-                # legend = [f'{x[:4]}kT' for x in cols]
+            # legend = [f'{x[:4]}kT' for x in cols]
 
             # fig.legend(legend,loc=(0.20,0.92),fontsize=15,markerscale=1.4,
             #    labelspacing=0.25,edgecolor='k')
             fig.supxlabel("Duration (a.u.)", fontsize=24, fontweight="light")
             fig.supylabel("Occurence (n)", fontsize=24, fontweight="light")
             plt.tight_layout()
-            plt.savefig(f"../Figures/{figname}.pdf", transparent=True, bbox_inches="tight")
-
-
+            plt.savefig(
+                f"../Figures/{figname}.pdf", transparent=True, bbox_inches="tight"
+            )
 
     return fig
+
 
 if __name__ == "__main__":
     # changing working directory to current directory name
     os.chdir(os.path.dirname(__file__))
 
-    ums = ["10", "60"]
-    kts = [ "2.80", "3.50", "4.00"]
-    
-    generate_fit_graph_multi_func(concentrations=ums, kts=kts, figname = "fig2A")
+    ums = ["10", "60"]  # selected concentrations
+    kts = ["2.80", "3.50", "4.00"]  # selected kT values
+    eqnames = ["ED", "DED", "TED", "PED"]  # selected equations
+    generate_fit_graph_multi_func(
+        concentrations=ums, kts=kts, eqnames=eqnames, figname="fig2A"
+    )
