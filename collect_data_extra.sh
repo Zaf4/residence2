@@ -7,7 +7,7 @@ UMS=("10" "20" "40" "60")
 
 for KT in ${KTS[@]}; do
     for UM in ${UMS[@]}; do
-        PATTERN=/home/gottar/5x10t/${KT}/${UM}/data.extra
+        PATTERN=/archive/temp/5x10t/${KT}/${UM}/data.extra
             echo $PATTERN
             cp $PATTERN $HOME/data_extra/${KT}_${UM}.extra
     done
