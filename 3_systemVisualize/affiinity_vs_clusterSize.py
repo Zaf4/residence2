@@ -83,7 +83,7 @@ def cluster_size_vs_affinity(df: pl.DataFrame):
         
     )+ labs(title="", x="Affinity (kT)", y="Cluster size")
 
-    return graph
+    return graph+ggsize(4,3)
 
 
 def cluster_size_vs_concentration(df: pl.DataFrame):
@@ -114,7 +114,7 @@ def cluster_size_vs_concentration(df: pl.DataFrame):
 
     )
 
-    return graph
+    return graph+ggsize(10,3)
 
 
 def main():
@@ -140,7 +140,9 @@ def main():
         affinity_graph = cluster_size_vs_affinity(grouped)
         concentration_graph = cluster_size_vs_concentration(grouped)
         ax = gggrid([affinity_graph, concentration_graph])
-        ggsave(ax, "../Figures/fig3DE.html", path=".", w=20, h=12)
+        ggsave(ax, "../Figures/fig3DE.html", path=".", w=20, h=12, unit="in")
+        ggsave(ax, "../Figures/fig3DE.pdf", path=".")
+
 
     return
 

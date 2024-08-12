@@ -29,12 +29,13 @@ classifiers = [
 ]
 
 dependencies = [
-    "numpy",
+    "numpy==1.26.4",
     "scipy",
     "statannot",
-    "lets_plot",
+    "lets_plot==4.4.0",
     "polars >= 1.0.0",
     "pandas >= 1.5.0, < 2",
     "seaborn == 0.12.2",
-    "matplotlib >= 3.6.0"
+    "matplotlib >= 3.6.0",
+    "cairosvg",
 ]
