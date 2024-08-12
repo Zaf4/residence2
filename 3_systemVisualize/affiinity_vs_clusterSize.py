@@ -7,10 +7,11 @@ import polars as pl
 from system_visualize import data2df, cluster_single_df
 
 
-KTS = ["1.00", "2.80", "3.00", "3.50", "4.00"]
+KTS = ["2.80", "3.00", "3.50", "4.00"]
 UMS = ["10", "20", "40", "60"]
 
-def extract_counts(kt: str, um:int)->pl.DataFrame:
+
+def extract_counts(kt: str, um: int) -> pl.DataFrame:
     """
     extract number of clusters for each cluster
     with type 5 and clusterID>0
@@ -24,31 +25,36 @@ def extract_counts(kt: str, um:int)->pl.DataFrame:
         energy.
     um : int
     """
-    print(f'{kt=}, {um=}')
-    coor = data2df(f'./data/data{kt}_{um}.extra') # read as the dataframe
-    df_cluster = cluster_single_df(coor) # find clusters in the dataframe
-    df = pl.from_pandas(df_cluster) # convert to polars dataframe
-    df = df.with_columns(pl.col("clusterID").fill_null(0).cast(pl.Int32),
-                pl.col(['type',"atomID"]).cast(pl.Int32))
-    df = df.filter(pl.col('type') == 5, pl.col('clusterID')>0) 
-    counts = df.group_by('clusterID').agg(pl.col('clusterID').count().alias('count')
-                                          ).sort('count').with_columns(
-                                              pl.lit(f'{kt}').alias('kT'),
-                                              pl.lit(um).alias('um')
-                                              )
-    
+    print(f"{kt=}, {um=}")
+    coor = data2df(f"./data_extra/{kt}_{um}.extra")  # read as the dataframe
+    df_cluster = cluster_single_df(coor)  # find clusters in the dataframe
+    df = pl.from_pandas(df_cluster)  # convert to polars dataframe
+    df = df.with_columns(
+        pl.col("clusterID").fill_null(0).cast(pl.Int32),
+        pl.col(["type", "atomID"]).cast(pl.Int32),
+    )
+    df = df.filter(pl.col("type") == 5, pl.col("clusterID") > 0)
+    counts = (
+        df.group_by("clusterID")
+        .agg(pl.col("clusterID").count().alias("size"))
+        .sort("size")
+        .with_columns(pl.lit(f"{kt}").alias("kT"), pl.lit(um).alias("um"))
+    )
+
     return counts
 
-def collect_dataframes(KTS: list, UMS: list)->pl.DataFrame:
+
+def collect_dataframes(KTS: list, UMS: list) -> pl.DataFrame:
     """
     Collect dataframes for each kT and um
     """
     df_all = pl.DataFrame()
     for kt in KTS:
         for um in UMS:
-            counts = extract_counts(kt=kt,um=um)
+            counts = extract_counts(kt=kt, um=um)
             df_all = pl.concat([df_all, counts])
     return df_all
+
 
 def cluster_size_vs_affinity(df: pl.DataFrame):
     """_summary_
@@ -59,17 +65,26 @@ def cluster_size_vs_affinity(df: pl.DataFrame):
         dataframe to visualize.
         with cluster sizes, affinities and concentrations.
     """
+    df = df.sort("um")
+    group = "um"
+    X = KTS
     
-
     graph = (
-        ggplot(df, aes(x='kT', y='count', fill='um')) +
-        geom_boxplot()+
-        scale_fill_viridis()+
-        labs(title='', x='Affinity (kT)', y='Cluster size')+
-        theme_classic()
-    )
+        ggplot(df, aes(x="kT", y="mean_cluster_size"))
+        + geom_line(aes(color=as_discrete(group)))
+        + geom_errorbar(aes(color=as_discrete(group), ymin="cluster_size_minus_std", ymax="cluster_size_plus_std"))
+        + geom_point(shape=21,mapping=aes(fill=as_discrete(group)),color="#1f1f1f",size=4)
+        + scale_color_viridis(direction=-1,labels = [f"{x}µM" for x in UMS])
+        + scale_fill_viridis(direction=-1,labels = [f"{x}µM" for x in UMS])
+        + theme_classic()
+        + scale_x_continuous(breaks=[float(x) for x in X])
+        + theme(legend_position="top",legend_title=element_blank(),legend_text=element_text(size=10))
+
+        
+    )+ labs(title="", x="Affinity (kT)", y="Cluster size")
 
     return graph
+
 
 def cluster_size_vs_concentration(df: pl.DataFrame):
     """_summary_
@@ -80,28 +95,57 @@ def cluster_size_vs_concentration(df: pl.DataFrame):
         dataframe to visualize.
         with cluster sizes, affinities and concentrations.
     """
-    
+
+    df = df.sort("kT")
+    group = "kT"
+    X = UMS
 
     graph = (
-        ggplot(df, aes(x='um', y='count', fill='kT')) +
-        geom_boxplot()+
-        scale_fill_viridis()+
-        labs(title='', x='Concentration (µM)', y='Cluster size')+
-        theme_classic()
+        ggplot(df, aes(x="um", y="mean_cluster_size",))
+        + geom_line(aes(color=as_discrete(group)))
+        + geom_errorbar(aes(color=as_discrete(group), ymin="cluster_size_minus_std", ymax="cluster_size_plus_std"))
+        + geom_point(shape=21,mapping=aes(fill=as_discrete(group)),color="#1f1f1f",size=4)
+        + scale_color_continuous(direction=-1,labels = [f"{float(x):.1f}kT" for x in KTS])
+        + scale_fill_continuous(direction=-1,labels = [f"{float(x):.1f}kT" for x in KTS])
+        + labs(title="", x="Concentration (µM)", y="Cluster size")
+        + theme_classic()
+        + scale_x_continuous(breaks=[float(x) for x in X])
+        + theme(legend_position="top",legend_title=element_blank(),legend_text=element_text(size=10))
+
     )
 
     return graph
 
 
-
 def main():
-    df = collect_dataframes(KTS, UMS)
-    affinity_graph = cluster_size_vs_affinity(df)
-    concentration_graph = cluster_size_vs_concentration(df)
-    ax = gggrid(affinity_graph, concentration_graph)
-    ggsave(ax, path='..Figures/fig3DE.pdf', width=8, height=6)
+    if not os.path.exists("data_extra/collected.parquet"):
+        df = collect_dataframes(KTS, UMS)
+        df.write_parquet("data_extra/collected.parquet")
+    else:
+        df = pl.read_parquet("data_extra/collected.parquet")
+
+    grouped = df.group_by(["kT", "um"]).agg(
+        pl.col("size").mean().alias("mean_cluster_size"),
+        pl.col("size").std().alias("std_cluster_size"),
+    ).with_columns(
+        (pl.col("mean_cluster_size") - pl.col("std_cluster_size")).alias("cluster_size_minus_std"),
+        (pl.col("mean_cluster_size") + pl.col("std_cluster_size")).alias("cluster_size_plus_std"),
+    ).with_columns(
+        pl.col("kT").cast(pl.Float64),
+        pl.col("um").cast(pl.Float32),
+    )
+    
+    print(grouped)
+    if True :
+        affinity_graph = cluster_size_vs_affinity(grouped)
+        concentration_graph = cluster_size_vs_concentration(grouped)
+        ax = gggrid([affinity_graph, concentration_graph])
+        ggsave(ax, "../Figures/fig3DE.html", path=".", w=20, h=12)
 
     return
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
+
+    
