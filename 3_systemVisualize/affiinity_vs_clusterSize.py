@@ -55,11 +55,12 @@ def collect_dataframes(KTS: list, UMS: list) -> pl.DataFrame:
     return df_all
 
 
-def cluster_size_vs_affinity(df: pl.DataFrame,
-                             group = "um",
-                             X = KTS,
-                             ymin = "confidence_95_low",
-                             ymax = "confidence_95_high"
+def cluster_size_vs_affinity(
+    df: pl.DataFrame,
+    group="um",
+    X=KTS,
+    ymin="confidence_95_low",
+    ymax="confidence_95_high",
 ):
     """
 
@@ -71,29 +72,43 @@ def cluster_size_vs_affinity(df: pl.DataFrame,
     """
     df = df.sort(group)
 
-    
+    color_kwargs = {
+        "palette": "Reds",
+        "labels": [f"{x}µM" for x in UMS],
+        "direction": 1,
+    }
+
     graph = (
         ggplot(df, aes(x="kT", y="mean_cluster_size"))
         + geom_line(aes(color=as_discrete(group)))
         + geom_errorbar(aes(color=as_discrete(group), ymin=ymin, ymax=ymax))
-        + geom_point(shape=21,mapping=aes(fill=as_discrete(group)),color="#1f1f1f",size=4)
-        + scale_color_viridis(direction=-1,labels = [f"{x}µM" for x in UMS])
-        + scale_fill_viridis(direction=-1,labels = [f"{x}µM" for x in UMS])
+        + geom_point(
+            shape=21, mapping=aes(fill=as_discrete(group)), color="#1f1f1f", size=4
+        )
+        + scale_color_brewer(**color_kwargs)
+        + scale_fill_brewer(**color_kwargs)
         + theme_classic()
         + scale_x_continuous(breaks=[float(x) for x in X])
-        + theme(legend_position="top",legend_title=element_blank(),legend_text=element_text(size=10))
+        + theme(
+            legend_position="top",
+            legend_title=element_blank(),
+            legend_text=element_text(size=12),
+            panel_background=element_blank(),
+            plot_background=element_blank(),
+            legend_background=element_blank(),
 
-        
-    )+ labs(title="", x="Affinity (kT)", y="Cluster size")
+        )
+    ) + labs(title="", x="Affinity (kT)", y="Cluster size")
 
-    return graph+ggsize(800,400)
+    return graph + ggsize(800, 400)
 
 
-def cluster_size_vs_concentration(df: pl.DataFrame,
-                                  group = "kT",
-                                  X = UMS,
-                                  ymin = "confidence_95_low",
-                                  ymax = "confidence_95_high"
+def cluster_size_vs_concentration(
+    df: pl.DataFrame,
+    group="kT",
+    X=UMS,
+    ymin="confidence_95_low",
+    ymax="confidence_95_high",
 ):
     """
 
@@ -106,38 +121,74 @@ def cluster_size_vs_concentration(df: pl.DataFrame,
 
     df = df.sort(group)
 
+    color_kwargs = {
+        "palette": "Purples",
+        "labels": [f"{float(x):.1f}kT" for x in KTS],
+        "direction": 1,
+    }
 
     graph = (
-        ggplot(df, aes(x="um", y="mean_cluster_size",))
+        ggplot(
+            df,
+            aes(
+                x="um",
+                y="mean_cluster_size",
+            ),
+        )
         + geom_line(aes(color=as_discrete(group)))
         + geom_errorbar(aes(color=as_discrete(group), ymin=ymin, ymax=ymax))
-        + geom_point(shape=21,mapping=aes(fill=as_discrete(group)),color="#1f1f1f",size=4)
-        + scale_color_continuous(direction=-1,labels = [f"{float(x):.1f}kT" for x in KTS])
-        + scale_fill_continuous(direction=-1,labels = [f"{float(x):.1f}kT" for x in KTS])
+        + geom_point(
+            shape=21, mapping=aes(fill=as_discrete(group)), color="#1f1f1f", size=4
+        )
+        + scale_color_brewer(**color_kwargs)
+        + scale_fill_brewer(**color_kwargs)
         + labs(title="", x="Concentration (µM)", y="Cluster size")
         + theme_classic()
-        + scale_x_continuous(breaks=[float(x) for x in X])
-        + theme(legend_position="top",legend_title=element_blank(),legend_text=element_text(size=10))
-
+        + scale_x_continuous(breaks=[int(x) for x in X])
+        + theme(
+            legend_position="top",
+            legend_title=element_blank(),
+            legend_text=element_text(size=12),
+            panel_background=element_blank(),
+            plot_background=element_blank(),
+            legend_background=element_blank(),
+        )
     )
 
-    return graph+ggsize(800,400)
+    return graph + ggsize(800, 400)
 
-def process_df(df:pl.DataFrame)->pl.DataFrame:
-    grouped = df.group_by(["kT", "um"]).agg(
-        pl.col("size").mean().alias("mean_cluster_size"),
-        pl.col("size").std().alias("std_cluster_size"),
-        pl.col("size").count().alias("sample_size"),
-    ).with_columns(
-        (pl.col("mean_cluster_size") - pl.col("std_cluster_size")).alias("cluster_size_minus_std"),
-        (pl.col("mean_cluster_size") + pl.col("std_cluster_size")).alias("cluster_size_plus_std"),
-        (pl.col("mean_cluster_size") - 1.96*(pl.col("std_cluster_size")/pl.col("sample_size"))).alias("confidence_95_low"), # z = 1.96 for CI 95
-        (pl.col("mean_cluster_size") + 1.96*(pl.col("std_cluster_size")/pl.col("sample_size"))).alias("confidence_95_high"),
-    ).with_columns(
-        pl.col("kT").cast(pl.Float64),
-        pl.col("um").cast(pl.Float32),
+
+def process_df(df: pl.DataFrame) -> pl.DataFrame:
+    grouped = (
+        df.group_by(["kT", "um"])
+        .agg(
+            pl.col("size").mean().alias("mean_cluster_size"),
+            pl.col("size").std().alias("std_cluster_size"),
+            pl.col("size").count().alias("sample_size"),
+        )
+        .with_columns(
+            (pl.col("mean_cluster_size") - pl.col("std_cluster_size")).alias(
+                "cluster_size_minus_std"
+            ),
+            (pl.col("mean_cluster_size") + pl.col("std_cluster_size")).alias(
+                "cluster_size_plus_std"
+            ),
+            (
+                pl.col("mean_cluster_size")
+                - 1.96 * (pl.col("std_cluster_size") / pl.col("sample_size"))
+            ).alias("confidence_95_low"),  # z = 1.96 for CI 95
+            (
+                pl.col("mean_cluster_size")
+                + 1.96 * (pl.col("std_cluster_size") / pl.col("sample_size"))
+            ).alias("confidence_95_high"),
+        )
+        .with_columns(
+            pl.col("kT").cast(pl.Float64),
+            pl.col("um").cast(pl.Float32),
+        )
     )
     return grouped
+
 
 def main():
     if not os.path.exists("data_extra/collected.parquet"):
@@ -151,18 +202,20 @@ def main():
 
     ymin = "confidence_95_low"
     ymax = "confidence_95_high"
-    affinity_graph = cluster_size_vs_affinity(grouped, ymin = ymin, ymax = ymax)
-    concentration_graph = cluster_size_vs_concentration(grouped, ymin = ymin, ymax = ymax)
-    ax = gggrid([affinity_graph, concentration_graph])+ggsize(600,300)
+    affinity_graph = cluster_size_vs_affinity(grouped, ymin=ymin, ymax=ymax)
+    concentration_graph = cluster_size_vs_concentration(grouped, ymin=ymin, ymax=ymax)
+    ax = (
+        gggrid([affinity_graph, concentration_graph])
+        + ggsize(700, 300)
+        + theme(panel_background=element_blank(), plot_background=element_blank())
+    )
     # ggsave(ax, "../Figures/fig3DE.html", path=".")
     ggsave(ax, "../Figures/fig3DE.pdf", path=".")
+    ggsave(ax, "../Figures/fig3DE.png", path=".")
     # ggsave(affinity_graph, "../Figures/fig3DE.png", path=".")
-
 
     return
 
 
 if __name__ == "__main__":
     main()
-
-    
