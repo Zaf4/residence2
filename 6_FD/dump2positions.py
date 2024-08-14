@@ -4,9 +4,14 @@ import argparse
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("-k", "--kt", type=str, help="kinetic temperature")
+argparser.add_argument("-o", "--output", type=str, help="output file name")
 args = argparser.parse_args()
 
 kt = args.kt
+
+f = open(args.output,"w")
+f.write(f"kt: {kt}\n")
+f.close()
  
 def is_bound(arr_DNA:np.ndarray,tf:np.ndarray,threshold:float=0.8) -> np.ndarray:
 
@@ -76,10 +81,14 @@ def find_positions_multistep(arr_DNA_ms:np.ndarray,arr_tf_ms:np.ndarray)->np.nda
 
     all_positions = np.zeros([n_tf,n_timestep]) # each col will be a timestep for rows (tfs)
 
+    f = open(args.output,"a")
+
     for i in range(n_timestep):
         all_positions[:,i] = find_positions(arr_DNA_ms[i],arr_tf_ms[i])
-        print(f"step: {i+1} out of {n_timestep}", end='\r')
-    print()
+        log = f"step: {i+1} out of {n_timestep}\n"
+        f.write(log)
+    f.close()
+
     return all_positions
 
 
@@ -120,6 +129,7 @@ def main(kt:str):
 
     for um in UMS:
         folder = f"~/5x10t/{kt}/{um}"
+        folder = os.path.expanduser(folder)
     
     os.chdir(folder)
     save_positions("dump.npy")
