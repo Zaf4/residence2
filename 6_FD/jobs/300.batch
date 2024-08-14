@@ -1,0 +1,12 @@
+#!/bin/bash
+#SBATCH -p normal
+#SBATCH --account=ErbasGroup
+#SBATCH --job-name=ZK
+#SBATCH --output=output.txt
+#SBATCH --error=error.txt
+#SBATCH --cpus-per-task=1
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 20
+#SBATCH --time=23:59:00
+
+$HOME/.venv/bin/python $HOME/5x10t/dump2positions.py -k 3.00
