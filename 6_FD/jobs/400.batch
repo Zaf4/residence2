@@ -2,8 +2,8 @@
 #SBATCH -p normal
 #SBATCH --account=ErbasGroup
 #SBATCH --job-name=ZK
-#SBATCH --output=output.txt
-#SBATCH --error=error.txt
+#SBATCH --output=output%j.txt
+#SBATCH --error=error%j.txt
 #SBATCH --cpus-per-task=1
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 20
