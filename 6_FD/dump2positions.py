@@ -4,13 +4,16 @@ import argparse
 import logging
 
 argparser = argparse.ArgumentParser()
-argparser.add_argument("-k", "--kt", type=str, help="kinetic temperature")
+argparser.add_argument("-f", "--fname", type=str, help="dump.npy")
+argparser.add_argument("-k", "--kt", type=str, help="kT")
+argparser.add_argument("-s", "--start", type=int, default=0, help="start")
+argparser.add_argument("-e", "--end", type=int, default=1000, help="end")
 args = argparser.parse_args()
 
 kt = args.kt
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename=f"log_{kt}.txt", level=logging.INFO, format="%(message)s")
+logging.basicConfig(filename=f"log_{kt}_s{args.start}e{args.end}.txt", level=logging.INFO, format="%(message)s")
 logging.info(f"kt: {kt}")
 
 
@@ -85,7 +88,7 @@ def find_positions_multistep(
     for i in range(n_timestep):
         all_positions[:, i] = find_positions(arr_DNA_ms[i], arr_tf_ms[i])
 
-        if (i+1) % 100 == 0:
+        if (i + 1) % 100 == 0:
             log = f"step: {i+1} out of {n_timestep}"
             logger.info(log)
 
@@ -93,7 +96,7 @@ def find_positions_multistep(
 
 
 def save_positions(
-    fname: str = "dump.npy", start: int = 4_001, end: int = 20_001
+    fname: str = "dump.npy", start: int = 4_001, end: int = 20_001, suffix: str = ""
 ) -> None:
     logger.info("loading data")
     arr = np.load(fname)[start:end]  # timestep between start and end
@@ -104,14 +107,12 @@ def save_positions(
     atom_types
     atom_id = np.arange(n_atoms) + 1
     n_DNA = sum((atom_types == 2) | (atom_types == 1))  # number of DNA beads
-    n_tf = sum(atom_types == 5)
+    # n_tf = sum(atom_types == 5)
 
     logger.info("conditions")
     # conditions
     condition_L = (atom_types == 3) & (atom_id % 3 == 1)
-    condition_H = (atom_types == 5) & (
-        atom_id % 3 == 2
-    )  # second statement in unnecessary
+    # condition_H = (atom_types == 5) & (atom_id % 3 == 2)  # second statement in unnecessary
     condition_R = (atom_types == 3) & (atom_id % 3 == 0)
 
     logger.info("array groups")
@@ -128,7 +129,7 @@ def save_positions(
     positions_R = find_positions_multistep(polymer_DNA, right_legs)
 
     logger.info("saving positions")
-    np.savez("positions.npz", L=positions_L, R=positions_R)
+    np.savez(f"positions_{suffix}.npz", L=positions_L, R=positions_R)
 
     return
 
@@ -141,7 +142,9 @@ def main(kt: str):
         folder = os.path.expanduser(folder)
         os.chdir(folder)
         logging.info(f"working on {folder}")
-        save_positions("dump.npy")
+        save_positions(
+            fname=args.fname, start=args.start, end=args.end, suffix=f"s{args.start}e{args.end}"
+        )
 
     return
 

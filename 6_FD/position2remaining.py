@@ -7,6 +7,8 @@ LetsPlot.setup_html()
 
 
 UMS = ["10","20","40","60"]
+KTS = ["2.80","3.00","3.50","4.00"]
+
 # %%
 def make_trailing_zeros(arr:np.ndarray)->np.ndarray:
     first_zeros = arr.argmin(axis=1) # first occurences of zeros for each tf (row)
@@ -76,20 +78,21 @@ def main():
     kt = "3.50"
 
     dfs = []
-    for um in UMS:
-        path = os.path.expanduser(f"~/5x10t/{kt}/{um}/positions.npz")
-        positionz = np.load(path)
-        L = positionz["L"]
-        R = positionz["R"]
-        df = bounds_dataframe(arr_L=L,arr_R=R,prefix=um)
-        dfs.append(df)
+    for kt in KTS:
+        for um in UMS:
+            path = os.path.expanduser(f"~/5x10t/{kt}/{um}/positions.npz")
+            positionz = np.load(path)
+            L = positionz["L"]
+            R = positionz["R"]
+            df = bounds_dataframe(arr_L=L,arr_R=R,prefix=f"{kt}_{um}")
+            dfs.append(df)
     
     nrows = df.height
     merged = pl.concat(dfs,how="horizontal").with_columns(
         pl.Series(np.arange(1,nrows+1)).alias('timestep'),
     )
 
-    merged.write_csv("merged.csv")
+    merged.write_csv("decays.csv")
     return
 
 if __name__ == '__main__':

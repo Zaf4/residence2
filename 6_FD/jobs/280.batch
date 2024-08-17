@@ -9,4 +9,4 @@
 #SBATCH --ntasks-per-node 20
 #SBATCH --time=23:59:00
 
-$HOME/.venv/bin/python $HOME/5x10t/dump2positions.py -k 2.80
+$HOME/.venv/bin/python $HOME/5x10t/dump2positions.py -k 2.80 -s 0 -e 1000 -f dump.npy
