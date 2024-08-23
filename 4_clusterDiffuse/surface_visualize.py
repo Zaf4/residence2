@@ -577,7 +577,7 @@ if __name__ == '__main__':
         # plt.annotate('A',xycoords='figure fraction', xy = (0.023,0.965),fontsize=48)
         # plt.annotate('B',xycoords='figure fraction', xy = (0.66,0.965),fontsize=48)
 
-        fig.savefig('../Figures/SI-fig2.pdf',transparent=True,bbox_inches='tight')
+        fig.savefig('../Figures/fig5AB.pdf',transparent=True,bbox_inches='tight')
         plt.show()
 
         
