@@ -211,7 +211,7 @@ def main():
     )
     # ggsave(ax, "../Figures/fig3DE.html", path=".")
     ggsave(ax, "../Figures/fig3DE.pdf", path=".")
-    ggsave(ax, "../Figures/fig3DE.png", path=".")
+    #ggsave(ax, "../Figures/fig3DE.png", path=".")
     # ggsave(affinity_graph, "../Figures/fig3DE.png", path=".")
 
     return

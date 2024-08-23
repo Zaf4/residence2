@@ -43,7 +43,7 @@ def residuals2boxplot(residuals:pd.DataFrame,ax:plt.Axes,hue:str=None,
                 palette=palette, saturation=1,linewidth=1.6,ax=ax,
                 showfliers=False,**props)
     #labeling,modyifying and scaling the axes
-    ax.legend(title=None,fontsize=18,loc='upper center')
+    ax.legend(title=None,fontsize=18,loc='upper right')
     ax.set_xlabel(None)
     ax.set_ylabel(None)
     ax.set_yscale('log')
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     )
     #plotting section
 
-    fig,axes = plt.subplots(nrows=3,ncols=1,figsize=(8,20))
+    fig,axes = plt.subplots(nrows=3,ncols=1,figsize=(8,14))  # was 8 20
 
     #graph by energy
     residuals2boxplot(res_melted,
