@@ -12,6 +12,35 @@ from scipy import special
 warnings.filterwarnings('ignore')
 pd.set_option('mode.chained_assignment', None)
 
+def sample_ends_favored(df: pd.DataFrame, n: int = 10) -> pd.DataFrame:
+    """sample a dataframe but favor the ends
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+
+    n : int, optional
+        end size, by default 10
+
+    Returns
+    -------
+    pd.DataFrame
+        sampled dataframe
+    """
+
+    df = df.dropna(axis=0)
+
+    # weight calculation to prevent overcrowding
+    ts = np.array(df.timestep)
+    # # weights = ((1/(ts*ts[::-1]))*10**5)**2
+    tmax = df.timestep.max()
+    weights = np.abs(ts - tmax / 2)
+    weights = 10 ** (weights / tmax) ** 2
+    sampled_df = pd.concat(
+        [df.head(n), df.sample(frac=0.20, random_state=42, weights=weights), df.tail(n)]
+    )
+    return sampled_df
+
 def deleteNaN(y:np.ndarray)->tuple[np.ndarray,np.ndarray]:
     """
     delete NaN parts of the input array and time array opened for it,
@@ -343,4 +372,4 @@ if __name__ == '__main__':
     # plt.annotate('B',xycoords='figure fraction', xy = (0.34,0.95),fontsize=48)
     # plt.annotate('C',xycoords='figure fraction', xy = (0.67,0.95),fontsize=48)
     fig.savefig('../Figures/fig6.pdf', transparent=True)
-    fig.savefig('../Figures/fig6.png', dpi=300, transparent=True)
+    # fig.savefig('../Figures/fig6.png', dpi=300, transparent=True)
