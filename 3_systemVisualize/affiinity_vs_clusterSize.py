@@ -175,11 +175,11 @@ def process_df(df: pl.DataFrame) -> pl.DataFrame:
             ),
             (
                 pl.col("mean_cluster_size")
-                - 1.96 * (pl.col("std_cluster_size") / pl.col("sample_size"))
+                - 1.96 * (pl.col("std_cluster_size") / pl.col("sample_size").sqrt())
             ).alias("confidence_95_low"),  # z = 1.96 for CI 95
             (
                 pl.col("mean_cluster_size")
-                + 1.96 * (pl.col("std_cluster_size") / pl.col("sample_size"))
+                + 1.96 * (pl.col("std_cluster_size") / pl.col("sample_size").sqrt())
             ).alias("confidence_95_high"),
         )
         .with_columns(
