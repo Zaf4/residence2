@@ -4,7 +4,7 @@
        <script type="text/javascript" data-lets-plot-script="library" src="https://cdn.jsdelivr.net/gh/JetBrains/lets-plot@v4.4.0/js-package/distr/lets-plot.min.js"></script>
    </head>
    <body>
-          <div id="BL7g3k"></div>
+          <div id="OAzMMU"></div>
    <script type="text/javascript" data-lets-plot-script="plot">
        var plotSpec={
 "ggsize":{
@@ -58,7 +58,11 @@
 }
 },
 "theme":{
-"exponent_format":"pow"
+"name":"classic",
+"exponent_format":"pow",
+"legend_title":{
+"blank":true
+}
 },
 "kind":"plot",
 "scales":[{
@@ -121,13 +125,21 @@
 "title":"Equation"
 }
 },
+"theme":{
+"name":"classic",
+"exponent_format":"pow",
+"legend_title":{
+"blank":true
+}
+},
 "kind":"plot",
 "scales":[{
 "aesthetic":"fill",
 "scale_mapper_kind":"color_cmap"
 },{
 "aesthetic":"y",
-"trans":"log2"
+"trans":"log10",
+"format":".0~e"
 }],
 "layers":[{
 "geom":"bar",
@@ -144,7 +156,7 @@
 "metainfo_list":[]
 }]
 };
-       var plotContainer = document.getElementById("BL7g3k");
+       var plotContainer = document.getElementById("OAzMMU");
        LetsPlot.buildPlotFromProcessedSpecs(plotSpec, -1, -1, plotContainer);
    </script>
    </body>

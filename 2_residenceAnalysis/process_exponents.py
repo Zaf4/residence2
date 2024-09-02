@@ -1,7 +1,24 @@
 import os
 
 import pandas as pd
-from lets_plot import *
+from lets_plot import (
+    LetsPlot,
+    aes,
+    element_blank,
+    geom_bar,
+    gggrid,
+    ggplot,
+    ggsize,
+    scale_fill_hue,
+    scale_fill_viridis,
+    scale_y_log2,
+    scale_y_log10,
+    theme,
+    theme_classic,
+    xlab,
+    ylab,
+    element_text
+)
 
 LetsPlot.setup_html()
 
@@ -34,7 +51,9 @@ p1 = (
     + ylab("Tau")
     + xlab("Concentration")
     + scale_y_log2()
-    + theme(exponent_format="pow")
+    + theme_classic()
+    + theme(exponent_format="pow", legend_title = element_blank())
+    
 )
 
 
@@ -46,7 +65,11 @@ p2 = (
     + ylab("Coefficient")
     + xlab("Concentration")
     + scale_y_log2()
+    + theme_classic()
+    + theme(exponent_format="pow",legend_title = element_blank())
+
 )
+
 p10 = gggrid([p1, p2]) + ggsize(1600, 800)
 p10.to_html("figures/exponents_by_um.html")
 
@@ -59,7 +82,9 @@ p3 = (
     + ylab("Tau")
     + xlab("Equation")
     + scale_y_log2()
-    + theme(exponent_format="pow")
+    + theme_classic()   
+    + theme(exponent_format="pow", legend_title = element_blank())
+    
 )
 
 
@@ -70,12 +95,15 @@ p4 = (
     + scale_fill_viridis()
     + ylab("Coefficient")
     + xlab("Equation")
-    + scale_y_log2()
+    + scale_y_log10(format=".0~e")
+    + theme_classic()  
+    + theme(exponent_format="pow",legend_title = element_blank())
+     
 )
 
 p20 = gggrid([p3, p4]) + ggsize(1600, 600)
 p20.to_html("figures/exponents_by_equation.html")
-p20.to_pdf("../Figures/SI-fig2.pdf")
+p20.to_svg("../Figures/SI-fig2.svg")
 
 # Plot the data
 p5 = (
@@ -85,7 +113,9 @@ p5 = (
     + ylab("Tau")
     + xlab("Equation")
     + scale_y_log2()
-    + theme(exponent_format="pow")
+    + theme_classic()  
+    + theme(legend_title = element_blank())
+     
 )
 
 
@@ -97,8 +127,10 @@ p6 = (
     + ylab("Coefficient")
     + xlab("Equation")
     + scale_y_log10()
-    + theme(exponent_format="pow")
+    + theme(exponent_format="pow", legend_title = element_blank())
+    + theme_classic()   
 )
+
 
 p30 = gggrid([p5, p6]) + ggsize(1200, 600)
 p30.to_html("figures/exponents_by_kT.html")
@@ -107,3 +139,4 @@ if __name__ == "__main__":
     # Load data
     # changing working directory to current directory name
     os.chdir(os.path.dirname(__file__))
+
