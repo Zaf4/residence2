@@ -46,7 +46,7 @@ fontparams = {
 sns.set_theme(style='ticks',
     rc = {
           'font.weight':'light',
-          'font.size':18,
+          'font.size':22,
           'font.family':'Sans Serif',
           'ytick.minor.size':'0',
           'ytick.major.size':'10',
@@ -56,8 +56,8 @@ sns.set_theme(style='ticks',
     )
 
 #Initing multiplot
-fig, axes = plt.subplots(4,2,figsize=(15,18))
-fig.subplots_adjust(wspace=0.15, hspace=0.15)
+fig, axes = plt.subplots(2,4,figsize=(21,9))
+fig.subplots_adjust(wspace=0.25, hspace=0.15)
 
 for i,df in enumerate(dfs):
     
@@ -74,7 +74,7 @@ for i,df in enumerate(dfs):
     #Barplot-------------------------------------------------------------------
     sns.barplot(data=df,
                   x='kind',y='residence',
-                  ax=axes[i,0], order = ['free','surf','core'],
+                  ax=axes[0,i], order = ['free','surf','core'],
                   palette='husl',edgecolor='k',saturation=1,
                   errcolor='k', errwidth=1.5, capsize=0.3)
     
@@ -90,7 +90,7 @@ for i,df in enumerate(dfs):
     swarm_data = df.sample(frac=0.12,random_state = 42,weights=df.residence**2)
     sns.swarmplot(data=swarm_data,
                   x='kind',y='residence',
-                  ax=axes[i,1],size=2,order = ['free','surf','core'],
+                  ax=axes[1,i],size=2,order = ['free','surf','core'],
                   palette='husl',edgecolor='k')
     
 
@@ -100,7 +100,7 @@ for i,df in enumerate(dfs):
     stat3,pvalue3 = stats.ttest_ind(df[df.kind==0], df[df.kind==2])
     
     #adding significance annotations -test: Welch's t-test---------------------
-    statannot.add_stat_annotation(axes[i,0],
+    statannot.add_stat_annotation(axes[0,i],
                                   data=df,
                                   x='kind',
                                   y='residence',
@@ -123,24 +123,23 @@ for i,df in enumerate(dfs):
     
     #graph settings------------------------------------------------------------
     for j in range(2):
-        ax = axes[i,j]
+        ax = axes[j,i]
         ax.set_xlabel(None)
-        # if j == 0:
-        #     ax.set_ylabel('Residence Time (a.u.)',**fontparams)
-        # else:
-        #     ax.set_ylabel('')
-        ax.set_ylabel(None)
-        fig.supylabel('Residence Time (a.u.)',**fontparams,x=0.05)
+        if i == 0:
+            ax.set_ylabel('Residence Time (a.u.)        ',**fontparams, x=0.00)
+        else:
+            ax.set_ylabel(None)
+        # fig.supylabel('Residence Time (a.u.)',**fontparams,x=0.065)
         ax.set_xticks([0, 1, 2])
         ax.set_xticklabels(['Free', 'Surface', 'Core'],
-                            fontsize=18,fontweight='light')
+                            fontsize=20,fontweight='light')
         """
         if j == 1:
             ax.annotate(text=f'{Fore.RED}{ratio_free}{Style.RESET_ALL}:{Fore.RED}{ratio_surf}{Style.RESET_ALL}:{Fore.RED}{ratio_core}{Style.RESET_ALL}%',
                         xycoords="axes fraction",xy=(0.3,0.8),fontsize=15)"""
 
         ax.tick_params(axis='y',
-                       labelsize=18)
+                       labelsize=20)
 
         y = 0.95 if j == 1 else 1.08
         """ax.set_title(r'$U_{ns} = $' + f'{kts[i]}kT',
@@ -157,5 +156,4 @@ for i,df in enumerate(dfs):
 #overall figure setting and saving
 sns.despine(trim=True)
 
-fig.savefig('../Figures/fig5C.pdf',transparent=True,bbox_inches='tight')
-#fig.savefig('../../res_figs/raws/fig5.pdf',transparent=True,bbox_inches='tight')
+fig.savefig('../Figures/fig5CD.pdf',transparent=True,bbox_inches='tight')
