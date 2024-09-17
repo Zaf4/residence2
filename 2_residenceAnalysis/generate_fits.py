@@ -49,8 +49,6 @@ def erfc_exp(x,a,b):
 
 def value_fit(val:np.ndarray,eq:callable)->tuple[np.ndarray,np.ndarray,tuple]:
     """
-    
-
     Parameters
     ----------
     val : np.ndarray
@@ -69,17 +67,20 @@ def value_fit(val:np.ndarray,eq:callable)->tuple[np.ndarray,np.ndarray,tuple]:
     """
     
     t_range = np.arange(len(val))+1
-    
+    tmax = np.max(t_range)
     # residual_t = np.zeros([len(val),2])
     
     t,val = deleteNaN(val)
-    
-    popt, pcov= curve_fit(eq, t, val, maxfev=20000000)
-    residuals = (val- eq(t, *popt))
+    val_norm = val/np.max(val)# number of occurences normalized
+    # for the residuals
+    popt_norm, _= curve_fit(eq, t, val_norm, maxfev=20_000_000)
+    residuals = (val- eq(t, *popt_norm))
     ress_sumofsqr =np.sum(residuals**2)
-    ss_res_norm = ress_sumofsqr/len(val)
-    # ss_res_norm = ss_res/len(t)
+    ss_res_norm = ress_sumofsqr/len(val)*tmax 
     
+    # for the fits
+    popt, _ = curve_fit(eq, t, val, maxfev=20_000_000)
+
     y_fit = eq(t_range, *popt)#full time length
     y_fit[y_fit<1] = np.nan#too small values to be removed
     y_fit[y_fit>np.max(val)*2] = np.nan#too big values removed
@@ -202,16 +203,16 @@ def equation_fit_save(datafile:os.PathLike)->None:
     
     #names and functions are listed for the for loop
     eqnames = ['ED','DED','TED','QED','PED','Powerlaw']
-    eqnames.append('ERFC')
+    # eqnames.append('ERFC')
     
     equations = [exp_decay,double_exp,tri_exp,quad_exp,penta_exp,powerlaw]
-    equations.append(erfc_exp)
+    # equations.append(erfc_exp)
 
     #initing residuals dataframe
     exponents = 'equation,energy,concentration,'
     exponents+= ','.join([f'coeff{i+1},tau{i+1}' for i in range(5)])+'\n'
     residues = pd.DataFrame()
-    for name,equation in tqdm(zip(eqnames,equations)):
+    for name,equation in tqdm(zip(eqnames,equations),total=len(eqnames)):
 
         fits = pd.DataFrame() #a fit data frame is opened for each equation
         ress = np.zeros([20]) #array to store residual values
