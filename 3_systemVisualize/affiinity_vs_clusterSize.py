@@ -167,22 +167,10 @@ def process_df(df: pl.DataFrame) -> pl.DataFrame:
             pl.col("size").count().alias("sample_size"),
         )
         .with_columns(
-            (pl.col("mean_cluster_size") - pl.col("std_cluster_size")).alias(
-                "cluster_size_minus_std"
-            ),
-            (pl.col("mean_cluster_size") + pl.col("std_cluster_size")).alias(
-                "cluster_size_plus_std"
-            ),
-            (
-                pl.col("mean_cluster_size")
-                - 1.96 * (pl.col("std_cluster_size") / pl.col("sample_size").sqrt())
-            ).alias("confidence_95_low"),  # z = 1.96 for CI 95
-            (
-                pl.col("mean_cluster_size")
-                + 1.96 * (pl.col("std_cluster_size") / pl.col("sample_size").sqrt())
-            ).alias("confidence_95_high"),
-        )
-        .with_columns(
+            (pl.col("mean_cluster_size") - pl.col("std_cluster_size")).alias("cluster_size_minus_std"),
+            (pl.col("mean_cluster_size") + pl.col("std_cluster_size")).alias("cluster_size_plus_std"),
+            (pl.col("mean_cluster_size") - 1.96 * (pl.col("std_cluster_size") / pl.col("sample_size").sqrt())).alias("confidence_95_low"),  # z = 1.96 for CI 95
+            (pl.col("mean_cluster_size") + 1.96 * (pl.col("std_cluster_size") / pl.col("sample_size").sqrt())).alias("confidence_95_high"),
             pl.col("kT").cast(pl.Float64),
             pl.col("um").cast(pl.Float32),
         )
