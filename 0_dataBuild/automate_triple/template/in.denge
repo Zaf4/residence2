@@ -1,0 +1,55 @@
+units lj
+
+dimension 3
+boundary p p p
+
+atom_style angle
+pair_style lj/cut 1.12
+pair_modify shift yes mix geometric
+bond_style fene
+angle_style harmonic
+
+special_bonds lj 0.0 1.0 1.0 coul 0.0 1.0 1.0
+
+read_data data.denge
+
+pair_coeff * * 1.00 1.0
+pair_coeff 3 5 1.00 0.7 1.12 #binding and nonbinding domain
+pair_coeff 1 3 1.00 0.7 2.5 #binding domains and DNA
+pair_coeff 2 3 2.00 0.7 2.5 #binding domains and DNA binding sites
+
+
+angle_coeff 1 15.0 180.0 #DNA
+angle_coeff 2 12.0 90.0 #binding and nonbinding domain
+
+neighbor 0.4 bin
+neigh_modify delay 10
+neigh_modify exclude type 6 6 #membrane
+
+group         1 type 1
+group         2 type 2
+group         3 type 3
+#group         4 type 4
+group	      5 type 5
+group	      6 type 6
+group	      emem type 1:5
+timestep      0.005
+
+thermo_style  multi
+thermo        500
+
+fix           1 emem nve temp 1.0 1.0 0.5
+fix           2 emem langevin 1.0 1.0 0.5 7213981
+
+
+minimize      0.0001 0.000001 100 1000
+
+velocity      3 create 2 4928342 rot yes dist gaussian
+velocity      5 create 3 2324324 rot yes dist gaussian
+
+#dump          1 emem atom 100 dump.main
+
+run           2000000
+
+write_data    data.main
+
