@@ -23,7 +23,7 @@ data = data.with_columns(
 data = data.drop(pl.col("total"))
 data = data.with_columns(
     pl.int_range(0, data.height, 1).add(1).alias("duration")
-    ).select(pl.col("duration"), pl.all().exclude("duration"))
+).select(pl.col("duration"), pl.all().exclude("duration"))
 print(data.tail())
 
 

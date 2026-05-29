@@ -13,7 +13,11 @@ args = argparser.parse_args()
 kt = args.kt
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename=f"log_{kt}_s{args.start}e{args.end}.txt", level=logging.INFO, format="%(message)s")
+logging.basicConfig(
+    filename=f"log_{kt}_s{args.start}e{args.end}.txt",
+    level=logging.INFO,
+    format="%(message)s",
+)
 logging.info(f"kt: {kt}")
 
 
@@ -89,7 +93,7 @@ def find_positions_multistep(
         all_positions[:, i] = find_positions(arr_DNA_ms[i], arr_tf_ms[i])
 
         if (i + 1) % 100 == 0:
-            log = f"step: {i+1} out of {n_timestep}"
+            log = f"step: {i + 1} out of {n_timestep}"
             logger.info(log)
 
     return all_positions
@@ -143,7 +147,10 @@ def main(kt: str):
         os.chdir(folder)
         logging.info(f"working on {folder}")
         save_positions(
-            fname=args.fname, start=args.start, end=args.end, suffix=f"s{args.start}e{args.end}"
+            fname=args.fname,
+            start=args.start,
+            end=args.end,
+            suffix=f"s{args.start}e{args.end}",
         )
 
     return

@@ -11,6 +11,7 @@ def split(path="data/duration_cont.csv"):
     # df.write_csv("data/duration_dist_affinity.csv")
     return data, ref
 
+
 def arr_minimize(arr: np.ndarray, method: str = "median") -> np.ndarray:
     """
     Minimizes 1d array by removing repeats, according to the given method.
@@ -46,11 +47,12 @@ def arr_minimize(arr: np.ndarray, method: str = "median") -> np.ndarray:
         elif method == "min":
             mid = int(np.min(positions))
 
-        arr1[arr1==0] = np.nan
+        arr1[arr1 == 0] = np.nan
         arr1[positions] = np.nan
         arr1[mid] = s  # mid value is kept
 
     return arr1
+
 
 def df_minimize(df: pl.DataFrame, method: str = "median") -> pl.DataFrame:
 
@@ -58,10 +60,8 @@ def df_minimize(df: pl.DataFrame, method: str = "median") -> pl.DataFrame:
     for column in df.columns:
         arr = df.select(column).to_numpy().flatten()
         arr = arr_minimize(arr, method=method)
-        minimized_df = minimized_df.with_columns(
-            pl.Series(arr).alias(column)
-        )
-    
+        minimized_df = minimized_df.with_columns(pl.Series(arr).alias(column))
+
     return minimized_df
 
 
@@ -70,7 +70,7 @@ def add_timestep(df: pl.DataFrame) -> pl.DataFrame:
 
 
 def log_normalize(df: pl.DataFrame) -> pl.DataFrame:
-    return df.with_columns(pl.all().add(1).log10()) # plus 1 log10 
+    return df.with_columns(pl.all().add(1).log10())  # plus 1 log10
 
 
 def melt(df: pl.DataFrame) -> pl.DataFrame:
@@ -83,6 +83,7 @@ def melt(df: pl.DataFrame) -> pl.DataFrame:
 
     return df
 
+
 def remove_zeros(df: pl.DataFrame) -> pl.DataFrame:
     return df.filter(pl.col("remaining") > 0)
 
@@ -91,7 +92,7 @@ def main():
     data, ref = split()
 
     data = df_minimize(data)
-    data = add_timestep(data)    
+    data = add_timestep(data)
     # data = log_normalize(data)
 
     # data = melt(data)

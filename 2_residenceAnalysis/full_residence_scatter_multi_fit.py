@@ -232,8 +232,12 @@ def generate_fit_graph_multi_func(
 
             # fig.legend(legend,loc=(0.20,0.92),fontsize=15,markerscale=1.4,
             #    labelspacing=0.25,edgecolor='k')
-            fig.supxlabel("Duration (a.u.)", fontsize=20, fontweight="light", y= 0.027, x = 0.55)
-            fig.supylabel("Occurence (n)", fontsize=20, fontweight="light", y = 0.55 , x = 0.027)
+            fig.supxlabel(
+                "Duration (a.u.)", fontsize=20, fontweight="light", y=0.027, x=0.55
+            )
+            fig.supylabel(
+                "Occurence (n)", fontsize=20, fontweight="light", y=0.55, x=0.027
+            )
             plt.tight_layout()
             plt.savefig(
                 f"../Figures/{figname}.pdf", transparent=True, bbox_inches="tight"

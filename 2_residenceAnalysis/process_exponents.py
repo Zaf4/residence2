@@ -17,7 +17,7 @@ from lets_plot import (
     theme_classic,
     xlab,
     ylab,
-    element_text
+    element_text,
 )
 
 LetsPlot.setup_html()
@@ -52,8 +52,7 @@ p1 = (
     + xlab("Concentration")
     + scale_y_log2()
     + theme_classic()
-    + theme(exponent_format="pow", legend_title = element_blank())
-    
+    + theme(exponent_format="pow", legend_title=element_blank())
 )
 
 
@@ -66,8 +65,7 @@ p2 = (
     + xlab("Concentration")
     + scale_y_log2()
     + theme_classic()
-    + theme(exponent_format="pow",legend_title = element_blank())
-
+    + theme(exponent_format="pow", legend_title=element_blank())
 )
 
 p10 = gggrid([p1, p2]) + ggsize(1600, 800)
@@ -82,9 +80,8 @@ p3 = (
     + ylab("Tau")
     + xlab("Equation")
     + scale_y_log2()
-    + theme_classic()   
-    + theme(exponent_format="pow", legend_title = element_blank())
-    
+    + theme_classic()
+    + theme(exponent_format="pow", legend_title=element_blank())
 )
 
 
@@ -96,9 +93,8 @@ p4 = (
     + ylab("Coefficient")
     + xlab("Equation")
     + scale_y_log10(format=".0~e")
-    + theme_classic()  
-    + theme(exponent_format="pow",legend_title = element_blank())
-     
+    + theme_classic()
+    + theme(exponent_format="pow", legend_title=element_blank())
 )
 
 p20 = gggrid([p3, p4]) + ggsize(1600, 600)
@@ -113,9 +109,8 @@ p5 = (
     + ylab("Tau")
     + xlab("Equation")
     + scale_y_log2()
-    + theme_classic()  
-    + theme(legend_title = element_blank())
-     
+    + theme_classic()
+    + theme(legend_title=element_blank())
 )
 
 
@@ -127,8 +122,8 @@ p6 = (
     + ylab("Coefficient")
     + xlab("Equation")
     + scale_y_log10()
-    + theme(exponent_format="pow", legend_title = element_blank())
-    + theme_classic()   
+    + theme(exponent_format="pow", legend_title=element_blank())
+    + theme_classic()
 )
 
 
@@ -139,4 +134,3 @@ if __name__ == "__main__":
     # Load data
     # changing working directory to current directory name
     os.chdir(os.path.dirname(__file__))
-

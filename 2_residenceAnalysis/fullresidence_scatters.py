@@ -126,9 +126,14 @@ def scatterit_multi(
     return
 
 
-
 def scatterit_multi_func(
-    df: pd.DataFrame, fits: list[pd.DataFrame], i: int, j: int, axes, palette: str, **kwargs
+    df: pd.DataFrame,
+    fits: list[pd.DataFrame],
+    i: int,
+    j: int,
+    axes,
+    palette: str,
+    **kwargs,
 ) -> None:
     """generates scatter plot with fits from multiple functions
 
@@ -152,8 +157,6 @@ def scatterit_multi_func(
     cols = [col for col in df]
     df["timestep"] = np.arange(len(df)) + 1
     fits["timestep"] = np.arange(len(df)) + 1
-
-
 
     df = pd.melt(
         df, id_vars=["timestep"], value_vars=cols, var_name="case", value_name="value"
@@ -211,7 +214,11 @@ def scatterit_multi_func(
     for fit in fits:
         # Line plot (Fits)----------------------------------------------------------
         fits = pd.melt(
-        fits, id_vars=["timestep"], value_vars=cols, var_name="case", value_name="value"
+            fits,
+            id_vars=["timestep"],
+            value_vars=cols,
+            var_name="case",
+            value_name="value",
         )
         sns.lineplot(
             data=fits,
@@ -241,7 +248,6 @@ def scatterit_multi_func(
     # ax.set_ylabel('Occurence', fontdict=font)
 
     return
-
 
 
 def generate_fit_graph(
@@ -334,7 +340,7 @@ def generate_fit_graph_multi_func(
     keywords: list[str] = ["10", "20", "40", "60"],
     figname: str = "noname",
 ) -> mpl.figure.Figure:
-    
+
     durations = pd.read_csv(datafile, index_col=None)
     eqnames = ["ED", "DED", "TED", "QED", "PED", "Powerlaw"]
     # eqnames = ['ED','DED','PED','Powerlaw'] #for smaller figures
@@ -359,7 +365,7 @@ def generate_fit_graph_multi_func(
     )
 
     fig, axes = plt.subplots(
-    nrow, ncol, sharex=True, sharey=True, figsize=(ncol * 4, nrow * 3)
+        nrow, ncol, sharex=True, sharey=True, figsize=(ncol * 4, nrow * 3)
     )
 
     for i, eqname in track(enumerate(eqnames), total=len(eqnames)):
@@ -379,18 +385,19 @@ def generate_fit_graph_multi_func(
                 partial_data, partial_fits, axes=axes, palette="viridis_r", i=i, j=j
             )
 
-                # legend = [f'{x[:4]}kT' for x in cols]
+            # legend = [f'{x[:4]}kT' for x in cols]
 
             # fig.legend(legend,loc=(0.20,0.92),fontsize=15,markerscale=1.4,
             #    labelspacing=0.25,edgecolor='k')
             fig.supxlabel("Duration (a.u.)", fontsize=24, fontweight="light")
             fig.supylabel("Occurence (n)", fontsize=24, fontweight="light")
             plt.tight_layout()
-            plt.savefig(f"../Figures/{figname}.pdf", transparent=True, bbox_inches="tight")
-
-
+            plt.savefig(
+                f"../Figures/{figname}.pdf", transparent=True, bbox_inches="tight"
+            )
 
     return fig
+
 
 if __name__ == "__main__":
     # changing working directory to current directory name

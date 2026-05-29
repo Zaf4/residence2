@@ -21,7 +21,8 @@ from lets_plot import (
     ggplot,
     ggsize,
     lims,
-    theme_classic, aes,
+    theme_classic,
+    aes,
     scale_color_viridis,
     scale_fill_viridis,
     element_text,
@@ -34,7 +35,9 @@ from lets_plot import (
     theme_void,
     geom_density,
 )
+
 LetsPlot.setup_html()
+
 
 # %%
 def double_exp(x, a, b, c, d):
@@ -71,7 +74,8 @@ def penta_exp(x, a, b, c, d, e, f, g, h, i, j):
         + i * np.exp(-x * j)
     )
 
-def deleteNaN(y: np.ndarray,t: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+
+def deleteNaN(y: np.ndarray, t: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """
     delete NaN parts of the input array and time array opened for it,
     and returns time array and values array.
@@ -83,10 +87,14 @@ def deleteNaN(y: np.ndarray,t: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
     return t, y
 
+
 def value_fit(
-    val: np.ndarray, t: np.ndarray, tmax: int, 
-    eq: callable, sigma_w: bool = False,
-    delete_nan: bool = True
+    val: np.ndarray,
+    t: np.ndarray,
+    tmax: int,
+    eq: callable,
+    sigma_w: bool = False,
+    delete_nan: bool = True,
 ) -> tuple[np.ndarray, np.ndarray, tuple]:
     """
 
@@ -109,15 +117,14 @@ def value_fit(
     t_range = np.arange(tmax) + 1
 
     if delete_nan:
-        t, val = deleteNaN(val,t)
+        t, val = deleteNaN(val, t)
 
     if sigma_w:
-        sigma = t.astype(float)**-10
+        sigma = t.astype(float) ** -10
         popt, _ = curve_fit(eq, t, val, maxfev=20000000, sigma=sigma)
 
     else:
         popt, _ = curve_fit(eq, t, val, maxfev=20000000)
-
 
     y_fit = eq(t_range, *popt)  # full time length
     y_fit[y_fit < 1] = np.nan  # too small values to be removed
@@ -126,8 +133,8 @@ def value_fit(
     return y_fit
 
 
-
 # %%
+
 
 def arr_minimize(arr: np.ndarray, method: str = "median") -> np.ndarray:
     """
@@ -191,6 +198,7 @@ def df_minimize(df: pd.DataFrame, **kwargs) -> pd.DataFrame:
 
     return df
 
+
 # %%
 # values dataframe
 df = pd.read_csv("./data/duration_cont.csv", index_col=None)
@@ -202,6 +210,7 @@ df = pl.from_pandas(df)
 
 # %%
 df.tail()
+
 
 # %%
 def sample_ends_favored_1D(df: pd.DataFrame, n: int = 10) -> pd.DataFrame:
@@ -220,13 +229,13 @@ def sample_ends_favored_1D(df: pd.DataFrame, n: int = 10) -> pd.DataFrame:
         sampled dataframe
     """
 
-
     mid_df = df.iloc[n:-n]
     sampled_df = pd.concat(
         [df.head(n), mid_df.sample(frac=0.20, random_state=42), df.tail(n)],
-        ignore_index=True
+        ignore_index=True,
     )
     return sampled_df
+
 
 # %%
 def sample_EF_1D(df: pl.DataFrame, n: int = 10) -> pd.DataFrame:
@@ -245,17 +254,14 @@ def sample_EF_1D(df: pl.DataFrame, n: int = 10) -> pd.DataFrame:
         sampled dataframe
     """
 
-    
-
     mid_df = df.slice(n, len(df) - 2 * n)
     sampled_df = pl.concat(
         [df.head(n), mid_df.sample(fraction=0.20, seed=42), df.tail(n)],
         how="vertical",
-    ).unpivot(index="timestep", 
-              value_name="remaining", 
-              variable_name="case")
-    
+    ).unpivot(index="timestep", value_name="remaining", variable_name="case")
+
     return sampled_df
+
 
 # %%
 def sample_EF_2D(df: pl.DataFrame, n: int = 10) -> pd.DataFrame:
@@ -264,11 +270,13 @@ def sample_EF_2D(df: pl.DataFrame, n: int = 10) -> pd.DataFrame:
         sample_EF_1D(df.select([col, "timestep"]), n=n).with_columns(
             pl.lit(col).alias("case")
         )
-        for col in df.columns if col != "timestep"
+        for col in df.columns
+        if col != "timestep"
     ]
     collected = pl.concat(all_parts, how="vertical")
 
     return collected.drop_nulls()
+
 
 # %%
 def add_type_um(df: pl.DataFrame) -> pl.DataFrame:
@@ -318,21 +326,27 @@ for c in cases:
         case_df = df.filter(pl.col("case") == c)
         timestep = case_df.select("timestep").to_numpy()
         data = case_df.select("remaining").to_numpy()
-    
+
         fits = fits.with_columns(
-            pl.Series(value_fit(data, timestep, tmax=tmax, eq=tri_exp)).alias(f"{c}_tri.exp"),
-            pl.Series(value_fit(data, timestep, tmax=tmax, eq=quad_exp)).alias(f"{c}_quad.exp"),
-            pl.Series(value_fit(data, timestep, tmax=tmax, eq=powerlaw)).alias(f"{c}_powerlaw"),
-            pl.Series(value_fit(data, timestep, tmax=tmax, eq=powerlaw,sigma_w=True)).alias(f"{c}_powerlaw.weighted"),
+            pl.Series(value_fit(data, timestep, tmax=tmax, eq=tri_exp)).alias(
+                f"{c}_tri.exp"
+            ),
+            pl.Series(value_fit(data, timestep, tmax=tmax, eq=quad_exp)).alias(
+                f"{c}_quad.exp"
+            ),
+            pl.Series(value_fit(data, timestep, tmax=tmax, eq=powerlaw)).alias(
+                f"{c}_powerlaw"
+            ),
+            pl.Series(
+                value_fit(data, timestep, tmax=tmax, eq=powerlaw, sigma_w=True)
+            ).alias(f"{c}_powerlaw.weighted"),
         )
 
 # %%
 fits
 
 # %%
-fitsm = fits.unpivot(index="timestep",
-                     value_name="remaining",
-                     variable_name="fit_case")
+fitsm = fits.unpivot(index="timestep", value_name="remaining", variable_name="fit_case")
 
 # %%
 fitsm
@@ -341,12 +355,12 @@ fitsm
 fitsm = fitsm.with_columns(
     pl.col("fit_case").str.split("_").list.get(0).alias("distribution"),
     pl.col("fit_case").str.split("_").list.get(1).alias("around"),
-    pl.col("fit_case").str.split("_").list.get(2).alias("equation")
+    pl.col("fit_case").str.split("_").list.get(2).alias("equation"),
 )
 
 # %%
-gauss = fitsm.filter(pl.col("distribution")=="gaus")
-uni = fitsm.filter(pl.col("distribution")=="uniform")
+gauss = fitsm.filter(pl.col("distribution") == "gaus")
+uni = fitsm.filter(pl.col("distribution") == "uniform")
 
 # %%
 gauss.sample(12)
@@ -355,60 +369,85 @@ gauss.sample(12)
 df.sample(12)
 
 # %%
-df_gauss =df.filter(pl.col("distribution")=="gaus")
+df_gauss = df.filter(pl.col("distribution") == "gaus")
 
 # %%
-eqs = ["tri.exp","powerlaw"]
+eqs = ["tri.exp", "powerlaw"]
+
 
 # %%
-def plot_it(df:pl.DataFrame,fits:pl.DataFrame,color_by):
+def plot_it(df: pl.DataFrame, fits: pl.DataFrame, color_by):
 
-    return (ggplot()
-            + geom_point(data=df, mapping=aes(x="timestep", y="remaining",color=color_by),fill="#dfdfdf",shape=21, stroke=1, size=5)
-            + geom_line(data=fits, mapping=aes(x="timestep", y="remaining",color=color_by),size=2,alpha=0.7)
-            + geom_line(data=df350,mapping=aes(x="timestep", y="remaining"),size=2,alpha=0.7, color="black")
-            + scale_color_brewer(labels=["1-4kT", "2-5kT"])
-            + scale_fill_brewer(labels=["1-4kT", "2-5kT"])
-            + scale_x_log10(format="~e")
-            + scale_y_log10(format=".0~e")
-            + theme_classic()
-            + ggsize(800,400)
-            + lims(x=(0.72, 3.7e3),y=(0.5, 1.1e7))
-            + theme(legend_title=element_blank(), 
-                    exponent_format="pow",
-                    axis_text=element_text(size=20,color="#1f1f1f"),
-                    axis_title=element_text(size=21,color="#1f1f1f"),
-                    legend_text=element_text(size=20),
-                    legend_position=[0.8, 0.8]
-                    )
-            + labs(x="Duration (a.u.)", y="Occurence (n)")
-            
-            )
+    return (
+        ggplot()
+        + geom_point(
+            data=df,
+            mapping=aes(x="timestep", y="remaining", color=color_by),
+            fill="#dfdfdf",
+            shape=21,
+            stroke=1,
+            size=5,
+        )
+        + geom_line(
+            data=fits,
+            mapping=aes(x="timestep", y="remaining", color=color_by),
+            size=2,
+            alpha=0.7,
+        )
+        + geom_line(
+            data=df350,
+            mapping=aes(x="timestep", y="remaining"),
+            size=2,
+            alpha=0.7,
+            color="black",
+        )
+        + scale_color_brewer(labels=["1-4kT", "2-5kT"])
+        + scale_fill_brewer(labels=["1-4kT", "2-5kT"])
+        + scale_x_log10(format="~e")
+        + scale_y_log10(format=".0~e")
+        + theme_classic()
+        + ggsize(800, 400)
+        + lims(x=(0.72, 3.7e3), y=(0.5, 1.1e7))
+        + theme(
+            legend_title=element_blank(),
+            exponent_format="pow",
+            axis_text=element_text(size=20, color="#1f1f1f"),
+            axis_title=element_text(size=21, color="#1f1f1f"),
+            legend_text=element_text(size=20),
+            legend_position=[0.8, 0.8],
+        )
+        + labs(x="Duration (a.u.)", y="Occurence (n)")
+    )
+
 
 # %% [markdown]
-# 
+#
 
 # %%
-grid_gauss =[
-        plot_it(df=df.filter(pl.col("distribution")=="gaus").sort("around"),
-                fits=gauss.filter(pl.col("equation")==eq).sort("around"),
-                color_by="around") 
-                for eq in eqs 
-                ]
+grid_gauss = [
+    plot_it(
+        df=df.filter(pl.col("distribution") == "gaus").sort("around"),
+        fits=gauss.filter(pl.col("equation") == eq).sort("around"),
+        color_by="around",
+    )
+    for eq in eqs
+]
 
 # %%
-grid_uni= [
-        plot_it(df=df.filter(pl.col("distribution")=="uniform").sort("around"),
-                fits=uni.filter(pl.col("equation")==eq).sort("around"),
-                color_by="around")+ scale_fill_hue(labels=["1-4kT", "2-5kT"])+scale_color_hue(labels=["1-4kT", "2-5kT"])
-                for eq in eqs 
-                ]
+grid_uni = [
+    plot_it(
+        df=df.filter(pl.col("distribution") == "uniform").sort("around"),
+        fits=uni.filter(pl.col("equation") == eq).sort("around"),
+        color_by="around",
+    )
+    + scale_fill_hue(labels=["1-4kT", "2-5kT"])
+    + scale_color_hue(labels=["1-4kT", "2-5kT"])
+    for eq in eqs
+]
 
 # %%
-all = gggrid(grid_gauss+grid_uni,ncol=2)+ggsize(900,700)
+all = gggrid(grid_gauss + grid_uni, ncol=2) + ggsize(900, 700)
 all
 
 # %%
-all.to_svg('../Figures/fig6.svg')
-
-
+all.to_svg("../Figures/fig6.svg")

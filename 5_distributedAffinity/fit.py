@@ -18,7 +18,8 @@ from lets_plot import (
     ggplot,
     ggsize,
     lims,
-    theme_classic, aes,
+    theme_classic,
+    aes,
     scale_color_viridis,
     scale_fill_viridis,
     element_text,
@@ -31,27 +32,30 @@ from lets_plot import (
     theme_void,
     geom_density,
 )
+
 LetsPlot.setup_html()
 
 # import seaborn as sns
 # import matplotlib.pyplot as plt
+
 
 def double_exp(x, a, b, c, d):
     return a * np.exp(-x * b) + (d) * np.exp(-x * c)
 
 
 def erfc_exp(t, A, tau, beta):
-    return A * np.exp(-(t / tau) ** beta)
+    return A * np.exp(-((t / tau) ** beta))
 
 
 # def erfc_exp(t, a, koff, ks):
-#     return (a 
-#             * np.exp(( np.square(koff) * t) / ks) 
+#     return (a
+#             * np.exp(( np.square(koff) * t) / ks)
 #             * erfc(np.sqrt((np.square(koff) * t) / ks))
 #     )
 
 # def streched_exp(t, a, tau, beta):
 #     return a * np.exp(-(t / tau) ** beta)
+
 
 def powerlaw(x, a, b):
     return a * x ** (-b)
@@ -83,7 +87,8 @@ def penta_exp(x, a, b, c, d, e, f, g, h, i, j):
         + i * np.exp(-x * j)
     )
 
-def deleteNaN(y: np.ndarray,t: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+
+def deleteNaN(y: np.ndarray, t: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """
     delete NaN parts of the input array and time array opened for it,
     and returns time array and values array.
@@ -95,10 +100,9 @@ def deleteNaN(y: np.ndarray,t: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
     return t, y
 
+
 def value_fit(
-    val: np.ndarray, t: np.ndarray,t_range, 
-    eq: callable,
-    delete_nan: bool = True
+    val: np.ndarray, t: np.ndarray, t_range, eq: callable, delete_nan: bool = True
 ) -> tuple[np.ndarray, np.ndarray, tuple]:
     """
 
@@ -120,18 +124,15 @@ def value_fit(
     """
 
     if delete_nan:
-        t, val = deleteNaN(val,t)
+        t, val = deleteNaN(val, t)
         popt, _ = curve_fit(eq, t, val, maxfev=200_000_000_0)
     print(f"{eq.__name__}: {popt}")
-    
 
     y_fit = eq(t_range, *popt)  # full time length
     # y_fit[y_fit < 1] = np.nan  # too small values to be removed
     # y_fit[y_fit > np.max(val) * 2] = np.nan  # too big values removed
 
     return y_fit
-
-
 
 
 def arr_minimize(arr: np.ndarray, method: str = "median") -> np.ndarray:
@@ -213,20 +214,16 @@ def sample_EF_1D(df: pl.DataFrame, n: int = 10) -> pd.DataFrame:
         sampled dataframe
     """
 
-    
-
     mid_df = df.slice(n, len(df) - 2 * n)
     sampled_df = pl.concat(
         [df.head(n), mid_df.sample(fraction=0.20, seed=42), df.tail(n)],
         how="vertical",
-    ).unpivot(index="timestep", 
-              value_name="remaining", 
-              variable_name="case")
-    
+    ).unpivot(index="timestep", value_name="remaining", variable_name="case")
+
     return sampled_df
 
 
-def create_fit_dataframe(data: pl.DataFrame,eq: callable) -> pl.DataFrame:
+def create_fit_dataframe(data: pl.DataFrame, eq: callable) -> pl.DataFrame:
 
     fits = pl.DataFrame()
     for c in data.select("case").unique().to_series().to_list():
@@ -235,33 +232,35 @@ def create_fit_dataframe(data: pl.DataFrame,eq: callable) -> pl.DataFrame:
         remaining = case_df.select("remaining").to_numpy().flatten()
 
         remaining = arr_minimize(remaining)
-        t_range = np.log10(np.linspace(0,10_000,200) + 2)
+        t_range = np.log10(np.linspace(0, 10_000, 200) + 2)
         y_fit = value_fit(remaining, timestep, t_range=t_range, eq=eq)
 
-        y_fit = 10**y_fit-1
+        y_fit = 10**y_fit - 1
         fits = fits.with_columns(
-            pl.Series(y_fit).alias(f"{c}_{eq.__name__.replace('_exp','.exp')}")
+            pl.Series(y_fit).alias(f"{c}_{eq.__name__.replace('_exp', '.exp')}")
         )
-
-
 
     return fits
 
-def add_timestep(df:pl.DataFrame)->pl.DataFrame:
+
+def add_timestep(df: pl.DataFrame) -> pl.DataFrame:
     return df.with_columns(
-        pl.int_range(1,df.height+1).alias("timestep").add(1).log10()
+        pl.int_range(1, df.height + 1).alias("timestep").add(1).log10()
     )
 
-def melt(df:pl.DataFrame)->pl.DataFrame:
+
+def melt(df: pl.DataFrame) -> pl.DataFrame:
     return df.unpivot(index="timestep", variable_name="case", value_name="remaining")
 
-def un_log(df:pl.DataFrame)->pl.DataFrame:
+
+def un_log(df: pl.DataFrame) -> pl.DataFrame:
     return df.with_columns(
-        (10**pl.col("timestep")).alias("timestep"),
-        (10**pl.col("remaining")-1).alias("remaining"),
+        (10 ** pl.col("timestep")).alias("timestep"),
+        (10 ** pl.col("remaining") - 1).alias("remaining"),
     )
 
-def plot_fits(df,fits):
+
+def plot_fits(df, fits):
     return (
         ggplot()
         + geom_point(data=df, mapping=aes(x="timestep", y="remaining", color="case"))
@@ -274,26 +273,24 @@ def plot_fits(df,fits):
         + theme_classic()
         + ggsize(width=1000, height=500)
         + scale_color_hue()
-
     )
 
 
 def main():
     data_pp = pl.read_csv("data/dist_log10p1.csv")
     data_raw = pl.read_csv("data/duration_cont.csv")
-    fit_tri = create_fit_dataframe(data_pp,tri_exp)
-    fit_erfc = create_fit_dataframe(data_pp,erfc_exp)
+    fit_tri = create_fit_dataframe(data_pp, tri_exp)
+    fit_erfc = create_fit_dataframe(data_pp, erfc_exp)
 
-    fitsm =melt(add_timestep(fit_tri)).with_columns(
-        (10**pl.col("timestep")).alias("timestep"),
+    fitsm = melt(add_timestep(fit_tri)).with_columns(
+        (10 ** pl.col("timestep")).alias("timestep"),
     )
 
     print(data_pp)
     print(fitsm)
-    fig = plot_fits(un_log(data_pp),fitsm)
-    fig.to_png("fits.png",dpi=300,w=10,h=5,unit="in")
+    fig = plot_fits(un_log(data_pp), fitsm)
+    fig.to_png("fits.png", dpi=300, w=10, h=5, unit="in")
 
 
 if __name__ == "__main__":
     main()
-    

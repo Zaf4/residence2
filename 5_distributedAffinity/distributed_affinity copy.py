@@ -40,9 +40,6 @@ def sample_ends_favored(df: pd.DataFrame, n: int = 10) -> pd.DataFrame:
     return sampled_df
 
 
-
-
-
 if __name__ == "__main__":
     # changing working directory to current directory name
     os.chdir(os.path.dirname(__file__))

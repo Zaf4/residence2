@@ -410,4 +410,3 @@ if __name__ == "__main__":
     fig.tight_layout(w_pad=1, h_pad=1)
 
     fig.savefig("../Figures/fig6__ERFC.pdf", transparent=True)
-
