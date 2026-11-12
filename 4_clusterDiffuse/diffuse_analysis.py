@@ -1016,8 +1016,7 @@ if __name__ == "__main__":
 
         fig = makePlotMulti_tau(dfs)
 
-        os.makedirs("../Figures/legacy", exist_ok=True)
-        fig.savefig("../Figures/legacy/fig4_seaborn.pdf", transparent=True, bbox_inches="tight")
+        fig.savefig("../Figures/fig4.pdf", transparent=True, bbox_inches="tight")
         # fig.savefig('../Figures/fig4.png', dpi=300, transparent=True)
         # ax1 = makePlotMulti_surface(dfs)
         # plt.savefig('../SI_Figures/multi_surface.pdf',transparent=True)

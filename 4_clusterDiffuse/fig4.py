@@ -6,7 +6,7 @@ B (right column): mean lifetime vs cluster size for three lifetime estimates
    (single-exponential fit, area under the survival curve, area + tail correction)
 
 Lifetimes are recomputed from ``data/fulls/*.full.npy`` with ``diffuse_analysis``.
-The previous seaborn version is ``diffuse_analysis.py`` (writes Figures/legacy/).
+Alternative to the primary seaborn Fig. 4 in ``diffuse_analysis.py``; writes Figures/legacy/.
 """
 
 import os
@@ -219,8 +219,9 @@ def main() -> None:
         align=True,
     ) + ggsize(1500, 1380)
 
+    # alternative version; the primary Fig. 4 is the seaborn one (diffuse_analysis.py)
     for ext in ("pdf", "png"):
-        print(ggsave(fig, f"../Figures/fig4.{ext}"))
+        print(ggsave(fig, f"../Figures/legacy/fig4_ggrust.{ext}"))
 
 
 if __name__ == "__main__":
