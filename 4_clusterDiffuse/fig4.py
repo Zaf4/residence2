@@ -1,12 +1,12 @@
-"""Figure 4 (ggrust).
-
-One row per binding energy (2.8, 3.0, 3.5, 4.0 kT, 60 µM):
+"""Figure 4 (ggrust), one row per binding energy (2.8, 3.0, 3.5, 4.0 kT at 60 µM).
 
 A (left column): snapshot of the clusters in the capsid, coloured by mean lifetime
-B (right column): mean lifetime vs cluster size, three lifetime estimates
+   (one shared log colour scale for all rows)
+B (right column): mean lifetime vs cluster size for three lifetime estimates
    (single-exponential fit, area under the survival curve, area + tail correction)
 
 Lifetimes are recomputed from ``data/fulls/*.full.npy`` with ``diffuse_analysis``.
+The previous seaborn version is ``diffuse_analysis.py`` (writes Figures/legacy/).
 """
 
 import os
@@ -17,10 +17,13 @@ import polars as pl
 from scipy import stats
 from ggrust import (
     aes,
+    coord_fixed,
     element_blank,
     element_line,
     element_rect,
     element_text,
+    facet_wrap,
+    geom_path,
     geom_point,
     geom_smooth,
     geom_text,
@@ -29,12 +32,11 @@ from ggrust import (
     ggsave,
     ggsize,
     guide_colorbar,
+    guide_legend,
     labs,
     scale_color_manual,
+    scale_fill_gradientn,
     scale_fill_manual,
-    scale_fill_gradient,
-    scale_x_continuous,
-    scale_y_continuous,
     theme,
     theme_classic,
 )
@@ -42,15 +44,15 @@ from ggrust import (
 import diffuse_analysis as da
 
 KTS = ["2.80", "3.00", "3.50", "4.00"]
-# snapshot shown in column A for each energy (the frames of the previous figure)
-SNAPSHOTS = {"2.80": 17351, "3.00": 10773, "3.50": 20542, "4.00": 20371}
+ENERGIES = [f"{float(kt):.1f} kT" for kt in KTS]
 
 CAPSID = "#900C3F"
-PURPLES = ("#fcfbfd", "#3f007d")  # matplotlib "Purples" ends
-METHODS = {  # column -> (label, colour), as the old figure
-    "tau_old": ("Single-exp fit", "#d62728"),
-    "tau_int": ("Integral", "#1f77b4"),
-    "tau_tail": ("Integral + tail", "#2ca02c"),
+# matplotlib "Purples" (the original panel A palette)
+PURPLES = ["#fcfbfd", "#efedf5", "#dadaeb", "#bcbddc", "#9e9ac8", "#807dba", "#6a51a3", "#54278f", "#3f007d"]
+METHODS = {  # column -> (label, husl(3) colour)
+    "tau_old": ("Exponential Decay", "#f77189"),
+    "tau_int": ("Survival Integral", "#50b131"),
+    "tau_tail": ("Tail-Corrected Integral", "#3ba3ec"),
 }
 INK = "#1f1f1f"
 
@@ -58,151 +60,166 @@ INK = "#1f1f1f"
 def base_theme():
     """seaborn 'ticks' look, matching fig2.py."""
     return theme_classic() + theme(
-        text=element_text(family="sans-serif", color=INK, size=17),
-        axis_text=element_text(size=16, color=INK),
-        axis_title=element_text(size=19, color=INK),
-        axis_line=element_line(color=INK, size=0.8),
-        axis_ticks=element_line(color=INK, size=0.8),
-        axis_ticks_length=5,
+        text=element_text(family="sans-serif", color=INK, size=15),
+        axis_text=element_text(size=14, color=INK),
+        axis_title=element_text(size=17, color=INK),
+        axis_line=element_line(color=INK, size=0.7),
+        axis_ticks=element_line(color=INK, size=0.7),
+        axis_ticks_length=4,
         legend_background=element_blank(),
         legend_key=element_blank(),
-        legend_title=element_blank(),
         legend_text=element_text(size=14),
+        legend_title=element_text(size=15),
+        strip_background=element_blank(),
+        strip_text=element_text(size=16, face="bold"),
         plot_background=element_rect(fill="white", color="white"),
         plot_tag=element_text(size=30, face="bold"),
         plot_tag_location="plot",
         plot_tag_position="topleft",
+        legend_position="bottom",
     )
 
 
 def load(kt: str) -> pd.DataFrame:
     df = pd.read_csv(f"./data/12timepoint/{kt.replace('.', '')}.csv", index_col=False)
-    return da.recompute_taus(df, f"./data/fulls/{kt}-60.full.npy", duration=300, primary="tail")
+    df = da.recompute_taus(df, f"./data/fulls/{kt}-60.full.npy", duration=300, primary="tail")
+    return df[df.clusterID > 0]
 
 
-def panel_snapshot(df: pd.DataFrame, kt: str, capsid: pl.DataFrame, tag: str | None):
-    """Clustered TFs at one frame inside the capsid outline, filled by mean lifetime."""
-    clusters = df[df.clusterID > 0]
-    frame = pl.from_pandas(clusters[clusters.timestep == SNAPSHOTS[kt]][["x", "y", "tau"]])
-    note = pl.DataFrame(
-        {
-            "x": [-62.0, 62.0],
-            "y": [-24.0, 24.0],
-            "label": [f"t = {SNAPSHOTS[kt]}", f"{float(kt):.1f} kT"],
-            "hjust": [0.0, 1.0],
-        }
-    )
-    lo, hi = clusters.tau.min(), clusters.tau.max()
+def stadium(capsid: pd.DataFrame, n: int = 200) -> pl.DataFrame:
+    """Capsid outline as one path: two straight walls joined by semicircles."""
+    radius = capsid.y.abs().max()
+    half = capsid.x.abs().max() - radius
+    right = np.linspace(-np.pi / 2, np.pi / 2, n)
+    left = right + np.pi
+    x = np.r_[half + radius * np.cos(right), -half + radius * np.cos(left), half]
+    y = np.r_[radius * np.sin(right), radius * np.sin(left), -radius]
+    return pl.DataFrame({"x": x, "y": y})
+
+
+def panel_snapshots(dfs: dict[str, pd.DataFrame], capsid: pl.DataFrame):
+    """One random frame per energy, clusters filled by mean lifetime, shared log scale."""
+    rng = np.random.default_rng()
+    frames = []
+    for kt, energy in zip(KTS, ENERGIES):
+        df = dfs[kt]
+        t = rng.choice(df.timestep.unique())
+        f = df[df.timestep == t]
+        # frame time goes in the strip, where clusters can never cover it
+        frames.append(
+            pl.DataFrame({"x": f.x, "y": f.y, "tau": f.tau, "energy": f"{energy}  ·  t = {t}"})
+        )
+    points = pl.concat(frames)
+    taus = pd.concat([d.tau for d in dfs.values()])
 
     return (
         ggplot()
-        + geom_point(aes("x", "y"), data=capsid, color=CAPSID, size=2.2)
+        + geom_path(aes("x", "y"), data=capsid, color=CAPSID, size=1.6)
         + geom_point(
-            aes("x", "y", fill="tau"), data=frame, shape=21, color="black", size=2.6, stroke=0.3
+            aes("x", "y", fill="tau"), data=points, shape=21, color=INK, size=2.1, stroke=0.15
         )
-        + geom_text(
-            aes("x", "y", label="label", hjust="hjust"),
-            data=note,
-            size=15,
-            color=INK,
-            fontface="italic",
+        + facet_wrap("energy", ncol=1, order=1)
+        + scale_fill_gradientn(
+            colors=PURPLES,
+            trans="log10",
+            limits=[taus[taus > 0].min(), taus.max()],
+            breaks=[5, 10, 20, 50, 100, 200, 500],
+            name="Mean Lifetime (a.u.)",
+            guide=guide_colorbar(barwidth=300, barheight=10),
         )
-        + scale_fill_gradient(
-            low=PURPLES[0],
-            high=PURPLES[1],
-            limits=[lo, hi],
-            name="Mean lifetime (a.u.)",
-            guide=guide_colorbar(barheight=150, barwidth=12),
-        )
-        + scale_x_continuous(limits=[-92, 92])
-        + scale_y_continuous(limits=[-31, 31])
-        + labs(x="", y="", tag=tag)
+        + coord_fixed(ratio=1, xlim=[-92, 92], ylim=[-31, 31])
+        + labs(x="", y="")
         + base_theme()
         + theme(
             axis_line=element_blank(),
             axis_ticks=element_blank(),
             axis_text=element_blank(),
             axis_title=element_blank(),
-            legend_position="left",
-            legend_title=element_text(size=14, angle=90),
         )
     )
 
 
-def panel_regression(df: pd.DataFrame, tag: str | None):
-    """Mean lifetime vs cluster size with a linear fit per lifetime estimate."""
-    simple = da.simplify(df[df.clusterID > 0])
-    frames, notes = [], []
-    for j, (col, (label, _)) in enumerate(METHODS.items()):
-        m = simple[["clusterSize", col]].replace([np.inf, -np.inf], np.nan)
-        m = m[m[col] > 0].dropna()
-        r, _ = stats.pearsonr(m["clusterSize"], m[col])
-        slope = np.polyfit(m["clusterSize"], m[col], 1)[0]
-        frames.append(
-            pl.DataFrame({"size": m["clusterSize"], "tau": m[col], "method": label})
-        )
-        notes.append((label, f"{label}: r = {r:.2f}, m = {slope:.1f}", j))
-    data = pl.concat(frames)
+def panel_regression(dfs: dict[str, pd.DataFrame]):
+    """Mean lifetime vs cluster size, linear fit per lifetime estimate, free scales."""
+    points, notes, counts = [], [], []
+    for kt, energy in zip(KTS, ENERGIES):
+        simple = da.simplify(dfs[kt])
+        frames = []
+        for col, (label, _) in METHODS.items():
+            m = simple[["clusterSize", col]].replace([np.inf, -np.inf], np.nan)
+            m = m[m[col] > 0].dropna()
+            frames.append(
+                pl.DataFrame({"size": m.clusterSize, "tau": m[col], "method": label, "energy": energy})
+            )
+        data = pl.concat(frames)
+        points.append(data)
 
-    x0, x1 = data["size"].min(), data["size"].max()
-    y1 = data["tau"].max()
-    y0 = data["tau"].min()
-    span = y1 - y0
-    annot = pl.DataFrame(
-        {
-            "size": [x0] * len(notes),
-            "tau": [y1 + span * (0.32 - 0.11 * j) for *_, j in notes],
-            "label": [text for _, text, _ in notes],
-            "method": [label for label, *_ in notes],
-        }
-    )
-    n_frames = pl.DataFrame(
-        {"size": [x1], "tau": [y0], "label": [f"N = {len(simple)}"]}
-    )
+        # r and slope per method, stacked in the headroom above the data
+        x0, x1 = data["size"].min(), data["size"].max()
+        y0, y1 = data["tau"].min(), data["tau"].max()
+        span = y1 - y0
+        for j, (label, _) in enumerate(METHODS.values()):
+            sub = data.filter(pl.col("method") == label)
+            r, _ = stats.pearsonr(sub["size"], sub["tau"])
+            slope = np.polyfit(sub["size"], sub["tau"], 1)[0]
+            notes.append(
+                {
+                    "size": x0,
+                    "tau": y1 + span * (0.36 - 0.11 * j),
+                    "label": f"r = {r:.2f}, m = {slope:.1f}",
+                    "method": label,
+                    "energy": energy,
+                }
+            )
+        counts.append({"size": x1, "tau": y0, "label": f"N = {len(simple)}", "energy": energy})
+    data = pl.concat(points)
     colors = {label: c for label, c in METHODS.values()}
 
     return (
         ggplot(data, aes("size", "tau", color="method"))
-        + geom_point(size=2.4, alpha=0.45)
-        + geom_smooth(aes(fill="method"), method="lm", se=True, size=1.6, alpha=0.18)
+        + geom_point(size=2.2, alpha=0.6)
+        + geom_smooth(aes(fill="method"), method="lm", se=True, size=1.4, alpha=0.15)
         + geom_text(
             aes(label="label"),
-            data=annot,
+            data=pl.DataFrame(notes),
             hjust=0,
-            size=12,
-            fontface="italic",
+            size=9,
+            fontface="bold_italic",
             show_legend=False,
         )
         + geom_text(
             aes("size", "tau", label="label"),
-            data=n_frames,
+            data=pl.DataFrame(counts),
             hjust=1,
             vjust=0,
-            size=15,
+            size=10,
             color=INK,
             fontface="italic",
             inherit_aes=False,
         )
-        + scale_color_manual(values=colors, breaks=list(colors))
+        + facet_wrap("energy", ncol=1, scales="free", order=1)
+        + scale_color_manual(values=colors, breaks=list(colors), guide=guide_legend(ncol=1))
         + scale_fill_manual(values=colors, guide="none")
-        + labs(x="Cluster size (#TF)", y="Mean lifetime (a.u.)", tag=tag)
+        + labs(x="Cluster Size (#TF)", y="Mean Lifetime (a.u.)")
         + base_theme()
-        + theme(legend_position="none")
+        + theme(legend_title=element_blank())
     )
 
 
 def main() -> None:
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    capsid = pl.read_csv("./data/capsid2d.csv").select("x", "y")
+    capsid = stadium(pd.read_csv("./data/capsid2d.csv"))
+    dfs = {kt: load(kt) for kt in KTS}
 
-    plots = []
-    for row, kt in enumerate(KTS):
-        df = load(kt)
-        plots.append(panel_snapshot(df, kt, capsid, "A" if row == 0 else None))
-        plots.append(panel_regression(df, "B" if row == 0 else None))
+    fig = gggrid(
+        [panel_snapshots(dfs, capsid), panel_regression(dfs)],
+        ncol=2,
+        widths=[1.25, 1],
+        tag_levels="A",
+        align=True,
+    ) + ggsize(1500, 1380)
 
-    fig = gggrid(plots, ncol=2, widths=[2.25, 1], align=False) + ggsize(1600, 1700)
-    for ext in ("pdf", "png", "svg"):
+    for ext in ("pdf", "png"):
         print(ggsave(fig, f"../Figures/fig4.{ext}"))
 
 
