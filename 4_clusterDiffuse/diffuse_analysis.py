@@ -5,6 +5,7 @@ import os
 import platform
 import seaborn as sns
 import matplotlib as mpl
+import matplotlib.patheffects
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from scipy import stats
@@ -815,11 +816,11 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
 
         # overlay the three lifetime estimates; fall back to the single `tau`
         # column for older CSVs that don't carry the per-method columns.
-        # Okabe-Ito colours: colour-blind safe, and clear of panel A's purples
+        # husl(3), as the seaborn figures
         methods = [
-            ("tau_old", "Exponential Decay", "#E69F00"),
-            ("tau_int", "Survival Integral", "#0072B2"),
-            ("tau_tail", "Tail-Corrected Integral", "#009E73"),
+            ("tau_old", "Exponential Decay", "#f77189"),
+            ("tau_int", "Survival Integral", "#50b131"),
+            ("tau_tail", "Tail-Corrected Integral", "#3ba3ec"),
         ]
         methods = [m for m in methods if m[0] in df_simple.columns]
         if not methods:
@@ -847,12 +848,13 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
             r, _ = stats.pearsonr(m["clusterSize"], m[col])
             slope = np.polyfit(m["clusterSize"], m[col], 1)[0]
             ax[row, 1].annotate(
-                xy=(0.05, 0.90 - 0.09 * j),
-                text=f"{label}: r = {r:.2f}, m = {slope:.1f}",
+                xy=(0.05, 0.89 - 0.11 * j),
+                text=f"r = {r:.2f}, m = {slope:.1f}",  # method given by colour
                 color=color,
-                fontsize=12,
-                fontweight="light",
-                style="italic",
+                fontsize=14,
+                fontweight="bold",
+                # white halo keeps the text readable over the points
+                path_effects=[mpl.patheffects.withStroke(linewidth=3, foreground="white")],
                 xycoords="axes fraction",
             )
 
@@ -899,18 +901,25 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
         mpl.lines.Line2D([], [], color=color, marker="o", markersize=8, linewidth=3, label=label)
         for _, label, color in methods
     ]
-    last_b = ax[-1, 1].get_position()
-    fig.legend(
-        handles=handles,
-        loc="center right",  # right-aligned with panel B, extends into the gap on the left
-        bbox_to_anchor=(last_b.x1, cax.get_position().y0 - 0.004),
-        borderaxespad=0,
-        ncol=3,
-        fontsize=13,
-        columnspacing=1.0,
-        handlelength=1.6,
-        frameon=False,
-    )
+    # centred under panel B (axis + its y label); font shrinks until it fits
+    col_b = ax[-1, 1].get_tightbbox().transformed(to_fig)
+    for fontsize in (13, 12, 11, 10):
+        legend = fig.legend(
+            handles=handles,
+            loc="center",
+            bbox_to_anchor=((col_b.x0 + col_b.x1) / 2, cax.get_position().y0 - 0.004),
+            borderaxespad=0,
+            ncol=3,
+            fontsize=fontsize,
+            columnspacing=0.9,
+            handlelength=1.5,
+            handletextpad=0.4,
+            frameon=False,
+        )
+        fig.canvas.draw()
+        if legend.get_window_extent().transformed(to_fig).width <= col_b.width:
+            break
+        legend.remove()
 
     return fig
 
