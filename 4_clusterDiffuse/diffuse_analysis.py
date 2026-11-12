@@ -826,26 +826,25 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
         ax[row, 1].set_ylabel("Mean Lifetime (a.u.)", fontsize=18)
         ax[row, 1].set_xlabel("Cluster Size (#TF)", fontsize=18)
 
-    fig.tight_layout(rect=(0.07, 0, 1, 0.97))  # room for the colour bar and tags
+    fig.tight_layout(rect=(0, 0.055, 1, 0.97))  # room for the colour bar and tags
 
-    # single colour bar spanning all rows of panel A, left of the snapshots
+    # single horizontal colour bar under panel A, centred on the snapshot column
     top, bottom = ax[0, 0].get_position(), ax[-1, 0].get_position()
-    cax = fig.add_axes([0.03, bottom.y0 + 0.02, 0.012, top.y1 - bottom.y0 - 0.04])
+    width = 0.6 * bottom.width
+    cax = fig.add_axes([bottom.x0 + (bottom.width - width) / 2, 0.045, width, 0.012])
     purples = plt.cm.ScalarMappable(cmap="Purples", norm=norm)
-    cbar = fig.colorbar(purples, cax=cax, extend="both")
+    cbar = fig.colorbar(purples, cax=cax, orientation="horizontal", extend="both")
     cbar.set_ticks([t for t in (5, 10, 20, 50, 100, 200, 500) if norm.vmin <= t <= norm.vmax])
-    cbar.ax.yaxis.set_major_formatter(mpl.ticker.ScalarFormatter())
-    cbar.ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-    cbar.ax.yaxis.set_ticks_position("left")
-    cbar.ax.yaxis.set_label_position("left")
+    cbar.ax.xaxis.set_major_formatter(mpl.ticker.ScalarFormatter())
+    cbar.ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
     cbar.ax.tick_params(labelsize=14)
     cbar.set_label("Mean Lifetime (a.u.)", fontsize=18)
 
-    # column tags, top-left of each column (A over the colour bar, B over the y label)
+    # column tags, top-left of each column (A over the snapshots, B over the y label)
     fig.canvas.draw()
     to_fig = fig.transFigure.inverted()
     y_tag = top.y1 + 0.005
-    x_a = to_fig.transform(cbar.ax.get_tightbbox().p0)[0]
+    x_a = top.x0
     x_b = to_fig.transform(ax[0, 1].get_tightbbox().p0)[0]
     for x, tag in ((x_a, "A"), (x_b, "B")):
         fig.text(x, y_tag, tag, fontsize=40, fontweight="bold", ha="left", va="bottom")
