@@ -91,7 +91,7 @@ def addTFindex(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def findDecayRate(decay: np.ndarray) -> float:
+def findDecayRate_old(decay: np.ndarray) -> float:
     """
     Using single exponential decay function finds meanlifetime of group of tfs
     or cluster of tfs.
@@ -123,12 +123,156 @@ def findDecayRate(decay: np.ndarray) -> float:
     return tau
 
 
-def addClusterLifetimes(
-    df: pd.DataFrame, states: np.ndarray, timestep: int = 1000, duration: int = 2000
-) -> pd.DataFrame:
+def findDecayRate(decay: np.ndarray, dt: float = 1.0) -> float:
+    """
+    Mean lifetime (tau) of a group/cluster of tfs as the area under the
+    survival curve, making no assumption about the shape of the decay.
 
-    # initing taus array
-    taus = np.zeros(len(df), dtype=np.float32)
+    The mean lifetime of a non-negative lifetime T equals the integral of its
+    survival function S(t) = N(t)/N0:
+
+        tau = E[T] = integral_0^inf S(t) dt = (1/N0) * integral_0^inf N(t) dt
+
+    This is exact for any decay shape; for a pure single exponential
+    N(t) = N0*exp(-K t) it reduces to tau = 1/K, matching findDecayRate_old.
+
+    The full curve (down to 0) is integrated -- unlike the old function, the
+    slow tail is NOT truncated, since dropping it would discard real area and
+    bias tau low.
+
+    Parameters
+    ----------
+    decay : np.ndarray
+        Survival curve N(t): number of bound tfs vs time, N0-->0.
+    dt : float
+        Time per index (timestep). tau is returned in the same time units.
+
+    Returns
+    -------
+    float
+        tau or meanlifetime. Equals 1/K for a pure exponential.
+
+    """
+
+    # count_bounds marks fully-unbound (0 remaining) as NaN; for the integral
+    # that is genuinely 0 bound particles, not missing data.
+    decay = np.nan_to_num(decay, nan=0.0)
+
+    N0 = decay[0]
+    if N0 <= 0:
+        return 0.0
+
+    # area under N(t), normalized by N0 -> integral of S(t)
+    tau = np.trapz(decay, dx=dt) / N0
+
+    return tau
+
+
+def findDecayRate_tail_corrected(
+    decay: np.ndarray, dt: float = 1.0, tail_frac: float = 0.5
+) -> float:
+    """
+    Mean lifetime (tau) as the area under the survival curve, plus an analytic
+    correction for the area beyond the observation window.
+
+    When the window ends before the cluster has fully unbound (right-censored
+    decay), N(t) never reaches 0 and the bare integral underestimates tau. We
+    add the remaining area of an exponential tail fitted to the last portion of
+    the curve:
+
+        tau = (1/N0) * [ integral_0^tend N(t) dt + N(tend)/K ]
+
+    where K is the local unbinding rate from fitting a*exp(-K t) to the final
+    `tail_frac` of the survival curve. The remainder N(tend)/K is the integral
+    of N(tend)*exp(-K (t - tend)) from tend to infinity.
+
+    If the curve already reaches ~0 the correction term is negligible and this
+    matches findDecayRate.
+
+    Parameters
+    ----------
+    decay : np.ndarray
+        Survival curve N(t): number of bound tfs vs time, N0-->0.
+    dt : float
+        Time per index (timestep). tau is returned in the same time units.
+    tail_frac : float
+        Fraction of the curve (from the end) used to fit the tail rate K.
+
+    Returns
+    -------
+    float
+        tau or meanlifetime, tail-corrected.
+
+    """
+
+    # count_bounds marks fully-unbound (0 remaining) as NaN; treat as 0 bound.
+    decay = np.nan_to_num(decay, nan=0.0)
+
+    N0 = decay[0]
+    if N0 <= 0:
+        return 0.0
+
+    t = np.arange(len(decay)) * dt
+    measured_area = np.trapz(decay, dx=dt)
+
+    N_end = decay[-1]
+
+    # if effectively fully decayed, no tail correction needed
+    if N_end <= N0 / 1000:
+        return measured_area / N0
+
+    def exp_decay(x, a, b):
+        return a * np.exp(-x * b)
+
+    # fit a*exp(-K t) to the last tail_frac of the curve to get the local rate K
+    start = int(len(decay) * (1 - tail_frac))
+    t_tail, decay_tail = t[start:], decay[start:]
+
+    try:
+        popt, _ = curve_fit(
+            exp_decay,
+            t_tail,
+            decay_tail,
+            p0=(N_end, 1.0 / (t[-1] + dt)),
+            maxfev=2000000,
+        )
+        K = popt[1]
+    except (RuntimeError, ValueError):
+        K = 0.0
+
+    # remaining area of the exponential tail beyond the window: N_end / K
+    tail_area = N_end / K if K > 0 else 0.0
+
+    tau = (measured_area + tail_area) / N0
+
+    return tau
+
+
+def addClusterLifetimes(
+    df: pd.DataFrame,
+    states: np.ndarray,
+    timestep: int = 1000,
+    duration: int = 2000,
+    primary: str = "tail",
+) -> pd.DataFrame:
+    """
+    Compute per-cluster mean lifetimes with all three methods in a single pass
+    and attach them as columns:
+
+        tau_old  : single-exponential fit          (findDecayRate_old)
+        tau_int  : area under survival curve        (findDecayRate)
+        tau_tail : area + censored-tail correction  (findDecayRate_tail_corrected)
+
+    All three are derived from the SAME decay curve, so the CSV can be compared
+    method-vs-method later without recomputing from the raw states. The `tau`
+    column is an alias to the chosen `primary` method ("old" | "int" | "tail")
+    so existing plotting code keeps working unchanged.
+    """
+
+    n = len(df)
+    taus_old = np.zeros(n, dtype=np.float32)
+    taus_int = np.zeros(n, dtype=np.float32)
+    taus_tail = np.zeros(n, dtype=np.float32)
 
     # for each cluster --also nonclusters-- add decay rates for that cluster
     for i in range(int(df.clusterID.max()) + 1):
@@ -140,15 +284,31 @@ def addClusterLifetimes(
         # for only tfs in the given --cluster-- and --timestep--
         partial = states[tfIDs - 1, timestep : timestep + duration]
 
-        # finding tau of a particular cluster
+        # one decay curve, three lifetime estimates
         decay = count_bounds(partial)
-        tau = findDecayRate(decay)
+        try:
+            t_old = findDecayRate_old(decay)
+        except (RuntimeError, ValueError):
+            # single-exp fit can fail to converge; flag instead of crashing
+            t_old = np.nan
+        t_int = findDecayRate(decay)
+        t_tail = findDecayRate_tail_corrected(decay)
 
         # assigning taus to relevant places
-        taus[atomIDs - 1] = tau
+        taus_old[atomIDs - 1] = t_old
+        taus_int[atomIDs - 1] = t_int
+        taus_tail[atomIDs - 1] = t_tail
 
-    # add taus array to df
-    df["tau"] = taus
+    # add per-method columns
+    df["tau_old"] = taus_old
+    df["tau_int"] = taus_int
+    df["tau_tail"] = taus_tail
+
+    # `tau` alias used by the existing plotting / regression code
+    primary_map = {"old": taus_old, "int": taus_int, "tail": taus_tail}
+    if primary not in primary_map:
+        raise ValueError(f"primary must be one of {list(primary_map)}, got {primary!r}")
+    df["tau"] = primary_map[primary]
 
     return df
 
@@ -262,6 +422,78 @@ def addSurface(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def load_states(statesfile: str | os.PathLike) -> np.ndarray:
+    """
+    Load and decode a raw full.npy state file into a per-TF bound/unbound array.
+
+    The raw file has two rows per TF (left and right arm). A TF counts as bound
+    only when BOTH arms are bound, so the two rows are summed (==2 -> bound) and
+    collapsed to one row per TF.
+
+    Parameters
+    ----------
+    statesfile : os.PathLike
+        Path to a raw full.npy file (rows = 2*nTF, columns = time).
+
+    Returns
+    -------
+    np.ndarray
+        Boolean array, rows = nTF, columns = time. states[tfID-1] is one TF.
+    """
+
+    states = np.load(statesfile)
+    stateU = states[1::2].astype(int) + states[0::2].astype(int)
+    stateU[stateU == 1] = 0
+    stateU[stateU == 2] = 1
+    return stateU.astype(bool)
+
+
+def recompute_taus(
+    df: pd.DataFrame,
+    statesfile: str | os.PathLike,
+    duration: int = 300,
+    primary: str = "tail",
+) -> pd.DataFrame:
+    """
+    Recompute the tau_old / tau_int / tau_tail columns for an already-built
+    dataframe, using the raw states file but reusing the existing cluster
+    assignments (clusterID / tfID / atomID / timestep) in df.
+
+    This avoids rerunning clustering and surface analysis: only the lifetime
+    estimates are redone, per timestep, with the current findDecayRate* code.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe from a saved CSV (must contain clusterID, tfID, atomID,
+        timestep).
+    statesfile : os.PathLike
+        Path to the matching raw full.npy file.
+    duration : int
+        Decay window length (must match the value used originally; default 300).
+    primary : str
+        Which method the `tau` alias points to ("old" | "int" | "tail").
+
+    Returns
+    -------
+    pd.DataFrame
+        df with tau_old / tau_int / tau_tail / tau recomputed.
+    """
+
+    states = load_states(statesfile)
+    parts = [
+        addClusterLifetimes(
+            group.copy(),
+            states,
+            timestep=int(ts),
+            duration=duration,
+            primary=primary,
+        )
+        for ts, group in df.groupby("timestep")
+    ]
+    return pd.concat(parts)
+
+
 def generateDF(
     dumpfile: os.PathLike = "./data/targetDUMP.npy",
     statesfile: os.PathLike = "./data/full.npy",
@@ -292,13 +524,7 @@ def generateDF(
     df = clust.cluster_single_frame(dump[timestep])
 
     # load residence states rows=proteins, columns=time
-    states = np.load(statesfile)
-    stateL = states[1::2].astype(int)
-    stateR = states[0::2].astype(int)
-    stateU = stateL + stateR
-    stateU[stateU == 1] = 0
-    stateU[stateU == 2] = 1
-    states = stateU.astype(bool)
+    states = load_states(statesfile)
 
     # adding indexes
     df = addIndexes(df)
@@ -426,17 +652,20 @@ def simplify(df: pd.DataFrame) -> pd.DataFrame:
         modified dataframe
     """
 
-    df = df[
-        [
-            "clusterID",
-            "residence",
-            "clusterSize",
-            "timestep",
-            "conformation",
-            "kT",
-            "tau",
-        ]
+    keep = [
+        "clusterID",
+        "residence",
+        "clusterSize",
+        "timestep",
+        "conformation",
+        "kT",
+        "tau",
+        "tau_old",
+        "tau_int",
+        "tau_tail",
     ]
+    # keep tau_* only when present so older CSVs (single tau column) still work
+    df = df[[c for c in keep if c in df.columns]]
     df = df.drop_duplicates(["clusterID", "timestep"])
     df = df[df.clusterID > 0]
     df = df[df.residence > 0]
@@ -544,20 +773,48 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
         sns.despine(ax=ax[row, 1])
         # regression  -----------------REGRESSION-----------------------------------
         df_simple = simplify(df)
-        sns.regplot(
-            data=df_simple, x="clusterSize", y="tau", ax=ax[row, 1], color="red"
-        )
-        # finding correlation coeff
-        r, p = stats.pearsonr(df_simple["clusterSize"], y=df_simple["tau"])
 
-        # showing pearson r
-        ax[row, 1].annotate(
-            xy=(0.05, 0.90),
-            text=f"r = {r:.2f}",
-            fontweight="light",
-            style="italic",
-            xycoords="axes fraction",
-        )
+        # overlay the three lifetime estimates; fall back to the single `tau`
+        # column for older CSVs that don't carry the per-method columns.
+        methods = [
+            ("tau_old", "single-exp", "red"),
+            ("tau_int", "integral", "tab:blue"),
+            ("tau_tail", "integral+tail", "green"),
+        ]
+        methods = [m for m in methods if m[0] in df_simple.columns]
+        if not methods:
+            methods = [("tau", "tau", "red")]
+
+        for j, (col, label, color) in enumerate(methods):
+            # drop failed single-exp fits (inf / non-positive) before plotting
+            m = df_simple[["clusterSize", col]].replace([np.inf, -np.inf], np.nan)
+            m = m[m[col] > 0].dropna()
+            if len(m) < 2:
+                continue
+
+            sns.regplot(
+                data=m,
+                x="clusterSize",
+                y=col,
+                ax=ax[row, 1],
+                color=color,
+                label=label,
+                scatter_kws={"s": 12, "alpha": 0.4},
+                line_kws={"linewidth": 2},
+            )
+
+            # pearson r + slope per method, stacked top-left
+            r, _ = stats.pearsonr(m["clusterSize"], m[col])
+            slope = np.polyfit(m["clusterSize"], m[col], 1)[0]
+            ax[row, 1].annotate(
+                xy=(0.05, 0.90 - 0.09 * j),
+                text=f"{label}: r={r:.2f}, m={slope:.1f}",
+                color=color,
+                fontsize=12,
+                fontweight="light",
+                style="italic",
+                xycoords="axes fraction",
+            )
 
         # showing number of timepoints
         ax[row, 1].annotate(
@@ -568,6 +825,7 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
             xycoords="axes fraction",
         )
 
+        ax[row, 1].legend(fontsize=10, loc="center right", frameon=False)
         ax[row, 1].tick_params(axis="both", labelsize=14)
         ax[row, 1].set_ylabel("Mean Lifetime (a.u.)", fontsize=18)
         ax[row, 1].set_xlabel("Cluster Size (#TF)", fontsize=18)
@@ -658,12 +916,23 @@ if __name__ == "__main__":
         # _______this part is done on PC to data obtained from Cluster_________
         # changing working directory to current directory name
         os.chdir(os.path.dirname(__file__))
-        df280 = pd.read_csv("./data/12timepoint/280.csv", index_col=False)
-        df300 = pd.read_csv("./data/12timepoint/300.csv", index_col=False)
-        df350 = pd.read_csv("./data/12timepoint/350.csv", index_col=False)
-        df400 = pd.read_csv("./data/12timepoint/400.csv", index_col=False)
 
-        dfs = [df280, df300, df350, df400]
+        # kT label -> (csv file, matching raw full.npy). The 12timepoint CSVs
+        # were produced from the ".../kt/60/full.npy" runs (the -60 variants).
+        kts = ["2.80", "3.00", "3.50", "4.00"]
+        csvs = ["280", "300", "350", "400"]
+
+        dfs = []
+        for kt, csv in zip(kts, csvs):
+            df = pd.read_csv(f"./data/12timepoint/{csv}.csv", index_col=False)
+
+            # recompute tau_old/tau_int/tau_tail from local full.npy when present;
+            # otherwise fall back to whatever tau is already in the CSV.
+            statesfile = f"./data/fulls/{kt}-60.full.npy"
+            if os.path.exists(statesfile):
+                df = recompute_taus(df, statesfile, duration=300, primary="tail")
+
+            dfs.append(df)
 
         fig = makePlotMulti_tau(dfs)
 
