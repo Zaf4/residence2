@@ -714,6 +714,11 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
     # one colour scale for the whole of panel A; lifetimes span ~2 decades
     # across energies, so a log scale keeps the weak-binding rows readable
     all_tau = pd.concat([d.loc[d.clusterID > 0, "tau"] for d in dfs])
+    # mako (teal -> navy), both ends trimmed so short-lived clusters
+    # stand out on white and long-lived ones do not turn black
+    cmap = mpl.colors.ListedColormap(
+        sns.color_palette("mako_r", as_cmap=True)(np.linspace(0.12, 0.88, 256))
+    )
     norm = mpl.colors.LogNorm(all_tau[all_tau > 0].min(), all_tau.max())
 
     for row, df in enumerate(dfs):
@@ -725,12 +730,13 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
         # plotting the -----------------CAPSID------------------
         sns.scatterplot(
             data=capsid,
-            color="#900C3F",
+            color="#8c8c8c",
             ax=ax[row, 0],
             x="x",
             y="y",
-            edgecolor="#900C3F",
-            size=20,
+            edgecolor="none",
+            s=14,
+            legend=False,
         )
 
         # plotting the system -------------SCATTER-----------------------------------
@@ -739,11 +745,12 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
             x="x",
             y="y",
             hue="tau",
-            palette="Purples",
+            palette=cmap,
             hue_norm=norm,
-            edgecolor="k",
+            edgecolor="#1f1f1f",
             ax=ax[row, 0],
-            linewidth=0.3,
+            s=45,
+            linewidth=0.25,
         )
         ax[row, 0].annotate(
             xy=(0.12, 0.06),
@@ -795,8 +802,8 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
                 ax=ax[row, 1],
                 color=color,
                 label=label,
-                scatter_kws={"s": 12, "alpha": 0.4},
-                line_kws={"linewidth": 2},
+                scatter_kws={"s": 30, "alpha": 0.7, "edgecolor": "white", "linewidths": 0.3},
+                line_kws={"linewidth": 3},
             )
 
             # pearson r + slope per method, stacked top-left
@@ -831,8 +838,8 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
     top, bottom = ax[0, 0].get_position(), ax[-1, 0].get_position()
     width = 0.6 * bottom.width
     cax = fig.add_axes([bottom.x0 + (bottom.width - width) / 2, 0.045, width, 0.012])
-    purples = plt.cm.ScalarMappable(cmap="Purples", norm=norm)
-    cbar = fig.colorbar(purples, cax=cax, orientation="horizontal", extend="both")
+    mappable = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+    cbar = fig.colorbar(mappable, cax=cax, orientation="horizontal", extend="both")
     cbar.set_ticks([t for t in (5, 10, 20, 50, 100, 200, 500) if norm.vmin <= t <= norm.vmax])
     cbar.ax.xaxis.set_major_formatter(mpl.ticker.ScalarFormatter())
     cbar.ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
@@ -850,7 +857,7 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
 
     # one legend for all of panel B, under the column, level with the colour bar
     handles = [
-        mpl.lines.Line2D([], [], color=color, marker="o", markersize=7, linewidth=2, label=label)
+        mpl.lines.Line2D([], [], color=color, marker="o", markersize=8, linewidth=3, label=label)
         for _, label, color in methods
     ]
     last_b = ax[-1, 1].get_position()
