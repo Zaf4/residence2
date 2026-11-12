@@ -41,6 +41,7 @@ dependencies = [
     "pyarrow",
     "rich",
     "ggrust>=0.8.1",
+    "pymupdf>=2.1",
 ]
 
 [dependency-groups]

@@ -19,12 +19,13 @@
 ### ***Data Analysis and Figures***
 
 Saved to Figures Folder
-*Note: Fig1 was direcly created in Illustrator*
+*Note: Fig1 panels A-D were created in Illustrator (`Figures/legacy/fig1_original.pdf`); panel E is drawn from data and spliced in by [fig1E.py](2_residenceAnalysis/fig1E.py)*
 
 #### *Following links leads to source code necessary to build the named figures...*   
 
 **2_residenceAnalysis** 
 
+* [Fig1E](2_residenceAnalysis/fig1E.py) (matplotlib + PyMuPDF splice into the Illustrator page)
 * [Fig2](2_residenceAnalysis/fig2.py) (ggrust; data in `2_residenceAnalysis/data/dimensions/` and `2_residenceAnalysis/data/distributions/`)
 * [SI: full fit grid (old Fig2A)](2_residenceAnalysis/legacy/full_residence_scatter_multi_fit.py)
 * [SI: residual boxplots (old Fig2B)](2_residenceAnalysis/legacy/residuals_boxplot.py)
