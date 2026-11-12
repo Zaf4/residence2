@@ -938,8 +938,9 @@ if __name__ == "__main__":
 
         fig.tight_layout()
 
-        # plt.annotate('A',xycoords='figure fraction', xy = (0.023,0.965),fontsize=48)
-        # plt.annotate('B',xycoords='figure fraction', xy = (0.66,0.965),fontsize=48)
+        # column tags: A = cluster snapshots, B = lifetime vs cluster size
+        fig.text(0.0, 1.0, "A", fontsize=40, fontweight="bold", va="bottom")
+        fig.text(0.665, 1.0, "B", fontsize=40, fontweight="bold", va="bottom")
 
         fig.savefig("../Figures/fig4.pdf", transparent=True, bbox_inches="tight")
         # fig.savefig('../Figures/fig4.png', dpi=300, transparent=True)

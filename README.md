@@ -36,7 +36,7 @@ Saved to Figures Folder
 
 **4_clusterDiffuse**
 
-* [Fig4](4_clusterDiffuse/fig4.py)
+* [Fig4](4_clusterDiffuse/diffuse_analysis.py)
 * [Fig5CD](4_clusterDiffuse/surface_analysis.py)
 * [Fig5AB](4_clusterDiffuse/surface_visualize.py)
 
