@@ -707,7 +707,7 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
 
     num_rows = len(dfs)
     fig, ax = plt.subplots(
-        num_rows, 2, figsize=(16, 4 * num_rows), gridspec_kw={"width_ratios": [2.25, 1]}
+        num_rows, 2, figsize=(14, 4 * num_rows), gridspec_kw={"width_ratios": [1.6, 1]}
     )
     kts = [2.80, 3.00, 3.50, 4.00]
 
@@ -821,7 +821,6 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
             xycoords="axes fraction",
         )
 
-        ax[row, 1].legend(fontsize=10, loc="center right", frameon=False)
         ax[row, 1].tick_params(axis="both", labelsize=14)
         ax[row, 1].set_ylabel("Mean Lifetime (a.u.)", fontsize=18)
         ax[row, 1].set_xlabel("Cluster Size (#TF)", fontsize=18)
@@ -848,6 +847,23 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
     x_b = to_fig.transform(ax[0, 1].get_tightbbox().p0)[0]
     for x, tag in ((x_a, "A"), (x_b, "B")):
         fig.text(x, y_tag, tag, fontsize=40, fontweight="bold", ha="left", va="bottom")
+
+    # one legend for all of panel B, under the column, level with the colour bar
+    handles = [
+        mpl.lines.Line2D([], [], color=color, marker="o", markersize=7, linewidth=2, label=label)
+        for _, label, color in methods
+    ]
+    last_b = ax[-1, 1].get_position()
+    fig.legend(
+        handles=handles,
+        loc="center",
+        bbox_to_anchor=(last_b.x0 + last_b.width / 2, cax.get_position().y0 - 0.004),
+        ncol=3,
+        fontsize=13,
+        columnspacing=1.0,
+        handlelength=1.6,
+        frameon=False,
+    )
 
     return fig
 
