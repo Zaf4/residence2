@@ -761,11 +761,7 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
     # one colour scale for the whole of panel A; lifetimes span ~2 decades
     # across energies, so a log scale keeps the weak-binding rows readable
     all_tau = pd.concat([d.loc[d.clusterID > 0, "tau"] for d in dfs])
-    # mako (teal -> navy), both ends trimmed so short-lived clusters
-    # stand out on white and long-lived ones do not turn black
-    cmap = mpl.colors.ListedColormap(
-        sns.color_palette("mako_r", as_cmap=True)(np.linspace(0.12, 0.88, 256))
-    )
+    cmap = plt.get_cmap("Purples")
     norm = mpl.colors.LogNorm(all_tau[all_tau > 0].min(), all_tau.max())
 
     for row, df in enumerate(dfs):
@@ -777,7 +773,7 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
         # plotting the -----------------CAPSID------------------
         # the capsid as one stadium outline instead of ~800 overlapping beads:
         # identical shape, a single vector path in the PDF
-        ax[row, 0].plot(*capsid_outline, color="#8c8c8c", linewidth=3, zorder=0)
+        ax[row, 0].plot(*capsid_outline, color="#900C3F", linewidth=3, zorder=0)
 
         # plotting the system -------------SCATTER-----------------------------------
         sns.scatterplot(
@@ -819,11 +815,11 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
 
         # overlay the three lifetime estimates; fall back to the single `tau`
         # column for older CSVs that don't carry the per-method columns.
-        # magma colours, as Fig. 2B
+        # Okabe-Ito colours: colour-blind safe, and clear of panel A's purples
         methods = [
-            ("tau_old", "Exponential Decay", "#f1605d"),
-            ("tau_int", "Survival Integral", "#721f81"),
-            ("tau_tail", "Tail-Corrected Integral", "#b73779"),
+            ("tau_old", "Exponential Decay", "#E69F00"),
+            ("tau_int", "Survival Integral", "#0072B2"),
+            ("tau_tail", "Tail-Corrected Integral", "#009E73"),
         ]
         methods = [m for m in methods if m[0] in df_simple.columns]
         if not methods:
