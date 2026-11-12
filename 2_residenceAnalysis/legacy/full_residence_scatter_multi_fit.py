@@ -177,7 +177,7 @@ def scatterit_multi_func(
 
 
 def generate_fit_graph_multi_func(
-    datafile: os.PathLike = "./data/durations_minimized.csv",
+    datafile: os.PathLike = "../data/durations_minimized.csv",
     concentrations: list[str] = ["10", "20", "40", "60"],
     kts: list[str] = ["1.00", "2.80", "3.00", "3.50", "4.00"],
     eqnames=["ED", "DED", "PED", "Powerlaw"],  # for smaller figures
@@ -218,7 +218,7 @@ def generate_fit_graph_multi_func(
             # collecting fit dataframes
             fit_list = list()
             for eqname in eqnames:
-                fitfile = f"./data/{eqname}.csv"
+                fitfile = f"../data/{eqname}.csv"
                 fits = pd.read_csv(fitfile, index_col=None)
                 partial_fits = fits[cols]
                 partial_fits["equation"] = eqname
@@ -240,7 +240,7 @@ def generate_fit_graph_multi_func(
             )
             plt.tight_layout()
             plt.savefig(
-                f"../Figures/{figname}.pdf", transparent=True, bbox_inches="tight"
+                f"../../Figures/legacy/{figname}.pdf", transparent=True, bbox_inches="tight"
             )
 
     return fig

@@ -85,7 +85,7 @@ if __name__ == "__main__":
     # changing working directory to current directory name
     os.chdir(os.path.dirname(__file__))
 
-    residuals = pd.read_csv("./data/residuals.csv", index_col=0)
+    residuals = pd.read_csv("../data/residuals.csv", index_col=0)
 
     kts = [f"{x[:4]}kT" for x in residuals.index]
     ums = [f"{x[-2:]}µM" for x in residuals.index]
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     residuals["concentration"] = ums
 
     # drop power-law
-    residuals = residuals.drop(["Powerlaw", "ERFC"], axis="columns")
+    residuals = residuals.drop(["Powerlaw", "ERFC"], axis="columns", errors="ignore")
     # melting the dataframe
     res_melted = pd.melt(
         residuals,
@@ -103,7 +103,7 @@ if __name__ == "__main__":
         id_vars=["energy", "concentration"],
     )
 
-    res_melted.to_parquet("./data/residuals_melted.parquet", index=False)
+    res_melted.to_parquet("../data/residuals_melted.parquet", index=False)
     # plot settings
     sns.set(
         style="ticks",
@@ -142,4 +142,4 @@ if __name__ == "__main__":
     )
 
     ##saving the figure
-    fig.savefig("../Figures/fig2B.pdf", transparent=True, bbox_inches="tight")
+    fig.savefig("../../Figures/legacy/fig2B.pdf", transparent=True, bbox_inches="tight")

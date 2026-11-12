@@ -2,7 +2,7 @@
 name = "RTbehavior"
 version = "1.0.0"
 description = "Residence Time distribution and behavior analyis."
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 license = {file = "LICENSE.txt"}
 authors = [
     {name = "Zafer Kosar"}
@@ -30,7 +30,7 @@ classifiers = [
 
 dependencies = [
     "numpy==1.26.4",
-    "scipy",
+    "scipy>=1.16",
     "statannot",
     "lets_plot",
     "polars >= 1.0.0",
@@ -40,6 +40,7 @@ dependencies = [
     "cairosvg",
     "pyarrow",
     "rich",
+    "ggrust>=0.8.1",
 ]
 
 [dependency-groups]

@@ -135,8 +135,8 @@ def main(option: str = "save"):
         data_full = pp_durations().reset_index(drop=True)
         data_full["equation"] = fits_full.equation
 
-        data_full.dropna().to_parquet("./data/durations_melted.parquet", index=False)
-        fits_full.dropna().to_parquet("./data/fits_melted.parquet", index=False)
+        data_full.dropna().to_parquet("./data/binary/durations_melted.parquet", index=False)
+        fits_full.dropna().to_parquet("./data/binary/fits_melted.parquet", index=False)
 
     elif option == "plot":
         plot_dfs_facet()

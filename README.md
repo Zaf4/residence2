@@ -25,8 +25,9 @@ Saved to Figures Folder
 
 **2_residenceAnalysis** 
 
-* [Fig2A](2_residenceAnalysis/full_residence_scatter_multi_fit.py)
-* [Fig2B](2_residenceAnalysis/residuals_boxplot.py)
+* [Fig2](2_residenceAnalysis/fig2.py) (ggrust; data in `2_residenceAnalysis/data/dimensions/` and `2_residenceAnalysis/data/distributions/`)
+* [SI: full fit grid (old Fig2A)](2_residenceAnalysis/legacy/full_residence_scatter_multi_fit.py)
+* [SI: residual boxplots (old Fig2B)](2_residenceAnalysis/legacy/residuals_boxplot.py)
 * [SI-Fig1](2_residenceAnalysis/fullresidence_scatters.py)
 
 **3_systemVisualize**  
