@@ -213,7 +213,7 @@ def panel_fit() -> "ggplot":
         + scale_fill_manual(values=POINT_FILLS)
         + scale_x_log10(breaks=[1, 10, 100, 1000], format=".0e", limits=[0.72, 3.85e3])
         + scale_y_log10(breaks=[1, 10, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7], format=".0e", limits=[0.5, 1.2e7])
-        + labs(x="Duration (a.u.)", y="Occurence (n)", title=" ")  # blank title = room of B's strips
+        + labs(x="Duration (a.u.)", y="Occurrence (n)", title=" ")  # blank title = room of B's strips
         + base_theme()
         + theme(
             exponent_format=("pow", 0, 0),

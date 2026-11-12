@@ -24,7 +24,6 @@ from fig2 import (  # noqa: E402  (same data loading and fitting as Fig. 2A)
     effective_dimensions,
     effective_fit,
     fit_n_exp,
-    sample_ends_favored,
 )
 import polars as pl  # noqa: E402
 
@@ -59,6 +58,13 @@ def median_per_count(t: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarr
         .sort("duration")
     )
     return df["duration"].to_numpy(), df["count"].to_numpy()
+
+
+def representative(t: np.ndarray, y: np.ndarray, n: int) -> tuple[np.ndarray, np.ndarray]:
+    """n real points, the nearest ones to n evenly spaced log-durations."""
+    targets = np.logspace(0, np.log10(t.max()), n)
+    idx = np.unique([np.abs(np.log(t) - np.log(x)).argmin() for x in targets])
+    return t[idx], y[idx]
 
 
 def style_axes(ax, xlabel: str = "Duration", ylabel: str | None = None) -> None:
@@ -117,29 +123,44 @@ def draw_panel() -> None:
     fig = plt.figure(figsize=(width, height))
     bottom, top = 0.17, 0.95
     lefts, w = (0.075, 0.405, 0.735), 0.245
-    xlim, ylim = (0.8, t.max() * 1.3), (0.6, y.max() * 2.5)
+    xlim, ylim = (0.8, t_raw.max() * 1.4), (0.9, y.max() * 2.5)
     axes = [fig.add_axes([l, bottom, w, top - bottom]) for l in lefts]
 
-    # 1) raw distribution: every (duration, count) pair
+    # a few representative points, as the original sketch: real values (except the
+    # schematic spread of the tail), picked
+    # evenly along log(duration) so the shape of the curve stays true
+    head = y > 45  # the smooth part of the curve; low counts form the scattered tail
+    curve_t, curve_y = representative(t[head], y[head], n=10)
+    # the scattered tail of the raw data: several durations share the same low
+    # counts; the median step collapses each count to one point
+    tail_t, tail_y, med_t, med_y = [], [], [], []
+    for c in (16, 6, 2):
+        median = np.median(t_raw[y_raw == c])
+        # schematic: three events with this count, spread around their true
+        # median so the fan (and its collapse to the middle point) is visible
+        tail_t += list(median * np.array([0.6, 1.0, 1.65]))
+        tail_y += [c] * 3
+        med_t.append(median)
+        med_y.append(c)
+    marker = dict(color=RED, edgecolors=INK, linewidths=0.5, zorder=2)
+
+    # 1) raw distribution
     ax = axes[0]
-    ax.scatter(t_raw, y_raw, s=3, color=RED, edgecolors=INK, linewidths=0.15, alpha=0.8)
+    ax.scatter(np.r_[curve_t, tail_t], np.r_[curve_y, tail_y], s=16, **marker)
     style_axes(ax, ylabel="Occurrence")
 
     # 2) median duration per distinct count
     ax = axes[1]
-    ax.scatter(t, y, s=4, color=RED, edgecolors=INK, linewidths=0.2)
+    ax.scatter(np.r_[curve_t, med_t], np.r_[curve_y, med_y], s=16, **marker)
     style_axes(ax)
 
     # 3) fit with a sum of exponentials, components underneath
     ax = axes[2]
-    dense = np.full(int(t.max()), np.nan)
-    dense[t.astype(int) - 1] = y
-    keep = sample_ends_favored(dense, n=8, frac=0.15)
     for c, i in zip(COMPONENT_COLORS, order):
         comp = amps[i] * np.exp(-rates[i] * grid)
         ok = comp >= ylim[0]
         ax.plot(grid[ok], comp[ok], color=c, linewidth=1.0, linestyle=(0, (3, 1.5)), zorder=1)
-    ax.scatter(keep + 1, dense[keep], s=9, color=RED, edgecolors=INK, linewidths=0.3, zorder=2)
+    ax.scatter(np.r_[curve_t, med_t], np.r_[curve_y, med_y], s=16, **marker)
     ok = total >= ylim[0]
     ax.plot(grid[ok], total[ok], color=INK, linewidth=1.5, linestyle=(0, (4, 1.6)), zorder=3)
     style_axes(ax)

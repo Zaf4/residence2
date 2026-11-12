@@ -5,8 +5,8 @@
 <rect x="6" y="6" width="400" height="418"/>
 </g>
 <g class="tile">
-<clipPath id="gg7817d91fabbc-clip0"><rect x="67.25" y="30.99" width="332.75" height="340.91"/></clipPath>
-<g class="panel" clip-path="url(#gg7817d91fabbc-clip0)">
+<clipPath id="gge0cd03f362d0-clip0"><rect x="67.25" y="30.99" width="332.75" height="340.91"/></clipPath>
+<g class="panel" clip-path="url(#gge0cd03f362d0-clip0)">
 <g>
 <circle cx="79.91" cy="60.91" r="6.6" fill="#fddce2" stroke="#000000" stroke-width="1.1"/>
 <circle cx="106.63" cy="74.82" r="6.6" fill="#fddce2" stroke="#000000" stroke-width="1.1"/>
@@ -207,7 +207,7 @@
 </g>
 <g class="titles">
 <text x="233.63" y="416.97" font-size="19" xml:space="preserve" fill="#1f1f1f" text-anchor="middle">Duration (a.u.)</text>
-<text x="19.61" y="208.03" font-size="19" xml:space="preserve" fill="#1f1f1f" text-anchor="middle" transform="rotate(-90 19.61 201.45)">Occurence (n)</text>
+<text x="19.61" y="208.03" font-size="19" xml:space="preserve" fill="#1f1f1f" text-anchor="middle" transform="rotate(-90 19.61 201.45)">Occurrence (n)</text>
 <text x="69.61" y="24.39" font-size="17" xml:space="preserve" font-weight="bold" fill="#1f1f1f" text-anchor="middle"> </text>
 <text x="18.39" y="32.54" font-size="26" xml:space="preserve" font-weight="bold" fill="#1f1f1f" text-anchor="middle">A</text>
 </g>
@@ -239,8 +239,8 @@
 <rect x="410" y="6" width="680" height="418"/>
 </g>
 <g class="tile">
-<clipPath id="gg7817d91fabbc-clip1"><rect x="469.47" y="36.99" width="302.27" height="334.91"/></clipPath>
-<g class="panel" clip-path="url(#gg7817d91fabbc-clip1)">
+<clipPath id="gge0cd03f362d0-clip1"><rect x="469.47" y="36.99" width="302.27" height="334.91"/></clipPath>
+<g class="panel" clip-path="url(#gge0cd03f362d0-clip1)">
 <path d="M483.21 356.68L508.19 352.11L558.15 340.71L608.11 330.45L658.07 315.62L758 296.24" fill="none" stroke="#f1605d" stroke-width="3.52"/>
 <path d="M483.21 336.15L508.19 328.17L558.15 314.48L608.11 301.94L658.07 283.7L758 238.08" fill="none" stroke="#b73779" stroke-width="3.52"/>
 <path d="M483.21 259.75L508.19 235.8L558.15 179.93L608.11 143.44L658.07 121.77L758 52.22" fill="none" stroke="#721f81" stroke-width="3.52"/>
@@ -300,8 +300,8 @@
 <text x="620.6" y="30.39" font-size="17" xml:space="preserve" font-weight="bold" fill="#1f1f1f" text-anchor="middle">Nonspecific interactions</text>
 </g>
 <g class="tile">
-<clipPath id="gg7817d91fabbc-clip2"><rect x="781.73" y="36.99" width="302.27" height="334.91"/></clipPath>
-<g class="panel" clip-path="url(#gg7817d91fabbc-clip2)">
+<clipPath id="gge0cd03f362d0-clip2"><rect x="781.73" y="36.99" width="302.27" height="334.91"/></clipPath>
+<g class="panel" clip-path="url(#gge0cd03f362d0-clip2)">
 <path d="M795.47 316.76L820.45 288.26L870.42 252.91L920.38 244.93L970.34 255.19L1070.26 265.45" fill="none" stroke="#f1605d" stroke-width="3.52"/>
 <path d="M795.47 312.2L820.45 291.68L870.42 265.45L920.38 260.89L970.34 271.15L1070.26 292.82" fill="none" stroke="#b73779" stroke-width="3.52"/>
 <path d="M795.47 333.87L820.45 312.2L870.42 306.5L920.38 304.22L970.34 305.36L1070.26 297.38" fill="none" stroke="#721f81" stroke-width="3.52"/>
@@ -373,8 +373,8 @@
 <rect x="1094" y="6" width="400" height="418"/>
 </g>
 <g class="tile">
-<clipPath id="gg7817d91fabbc-clip3"><rect x="1140.13" y="30.99" width="347.88" height="340.91"/></clipPath>
-<g class="panel" clip-path="url(#gg7817d91fabbc-clip3)">
+<clipPath id="gge0cd03f362d0-clip3"><rect x="1140.13" y="30.99" width="347.88" height="340.91"/></clipPath>
+<g class="panel" clip-path="url(#gge0cd03f362d0-clip3)">
 <path d="M1155.94 339.94L1193.14 304.15L1230.35 260.49L1286.16 203.23L1379.17 104.46L1472.19 46.49" fill="none" stroke="#382a54" stroke-width="3.52"/>
 <path d="M1155.94 356.4L1193.14 356.4L1230.35 355.69L1286.16 342.8L1379.17 324.19L1472.19 311.31" fill="none" stroke="#60ceac" stroke-width="3.52"/>
 <g>
