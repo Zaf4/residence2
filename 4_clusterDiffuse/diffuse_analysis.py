@@ -773,9 +773,9 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
         # overlay the three lifetime estimates; fall back to the single `tau`
         # column for older CSVs that don't carry the per-method columns.
         methods = [
-            ("tau_old", "single-exp", "red"),
-            ("tau_int", "integral", "tab:blue"),
-            ("tau_tail", "integral+tail", "green"),
+            ("tau_old", "Exponential Decay", "red"),
+            ("tau_int", "Survival Integral", "tab:blue"),
+            ("tau_tail", "Tail-Corrected Integral", "green"),
         ]
         methods = [m for m in methods if m[0] in df_simple.columns]
         if not methods:
@@ -804,7 +804,7 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
             slope = np.polyfit(m["clusterSize"], m[col], 1)[0]
             ax[row, 1].annotate(
                 xy=(0.05, 0.90 - 0.09 * j),
-                text=f"{label}: r={r:.2f}, m={slope:.1f}",
+                text=f"{label}: r = {r:.2f}, m = {slope:.1f}",
                 color=color,
                 fontsize=12,
                 fontweight="light",
@@ -856,8 +856,9 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
     last_b = ax[-1, 1].get_position()
     fig.legend(
         handles=handles,
-        loc="center",
-        bbox_to_anchor=(last_b.x0 + last_b.width / 2, cax.get_position().y0 - 0.004),
+        loc="center right",  # right-aligned with panel B, extends into the gap on the left
+        bbox_to_anchor=(last_b.x1, cax.get_position().y0 - 0.004),
+        borderaxespad=0,
         ncol=3,
         fontsize=13,
         columnspacing=1.0,
