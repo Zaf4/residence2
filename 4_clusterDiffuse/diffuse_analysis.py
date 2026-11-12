@@ -4,6 +4,7 @@ import cluster_analysis_extra as clust
 import os
 import platform
 import seaborn as sns
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from scipy import stats
@@ -709,6 +710,12 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
         num_rows, 2, figsize=(16, 4 * num_rows), gridspec_kw={"width_ratios": [2.25, 1]}
     )
     kts = [2.80, 3.00, 3.50, 4.00]
+
+    # one colour scale for the whole of panel A; lifetimes span ~2 decades
+    # across energies, so a log scale keeps the weak-binding rows readable
+    all_tau = pd.concat([d.loc[d.clusterID > 0, "tau"] for d in dfs])
+    norm = mpl.colors.LogNorm(all_tau[all_tau > 0].min(), all_tau.max())
+
     for row, df in enumerate(dfs):
         df = df[df.clusterID > 0]
         time = np.random.choice(df.timestep.unique())
@@ -733,6 +740,7 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
             y="y",
             hue="tau",
             palette="Purples",
+            hue_norm=norm,
             edgecolor="k",
             ax=ax[row, 0],
             linewidth=0.3,
@@ -756,19 +764,7 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
         ax[row, 0].set_ylim([-31, 31])
         ax[row, 0].set_xticks([])
         ax[row, 0].set_yticks([])
-        # adding color bar-----------------------------------------------------------
-        norm = plt.Normalize(df.tau.min(), df.tau.max())
-        purples = plt.cm.ScalarMappable(cmap="Purples", norm=norm)
-        purples.set_array([])
         ax[row, 0].get_legend().remove()
-        ax[row, 0].figure.colorbar(
-            purples,
-            ax=ax[row, 0],
-            location="left",
-            shrink=0.9,
-            extend="both",
-            pad=0.01,
-        )
         sns.despine(ax=ax[row, 0], left=True, bottom=True)
         sns.despine(ax=ax[row, 1])
         # regression  -----------------REGRESSION-----------------------------------
@@ -830,11 +826,29 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
         ax[row, 1].set_ylabel("Mean Lifetime (a.u.)", fontsize=18)
         ax[row, 1].set_xlabel("Cluster Size (#TF)", fontsize=18)
 
-        # plt.annotate('A',xycoords='figure fraction', xy = (0.01,0.95),fontsize=48)
-        # plt.annotate('B',xycoords='figure fraction', xy = (0.69,0.95),fontsize=48)
+    fig.tight_layout(rect=(0.07, 0, 1, 0.97))  # room for the colour bar and tags
 
-        fig.tight_layout()
-        fig.subplots_adjust(wspace=0, hspace=0.0)
+    # single colour bar spanning all rows of panel A, left of the snapshots
+    top, bottom = ax[0, 0].get_position(), ax[-1, 0].get_position()
+    cax = fig.add_axes([0.03, bottom.y0 + 0.02, 0.012, top.y1 - bottom.y0 - 0.04])
+    purples = plt.cm.ScalarMappable(cmap="Purples", norm=norm)
+    cbar = fig.colorbar(purples, cax=cax, extend="both")
+    cbar.set_ticks([t for t in (5, 10, 20, 50, 100, 200, 500) if norm.vmin <= t <= norm.vmax])
+    cbar.ax.yaxis.set_major_formatter(mpl.ticker.ScalarFormatter())
+    cbar.ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+    cbar.ax.yaxis.set_ticks_position("left")
+    cbar.ax.yaxis.set_label_position("left")
+    cbar.ax.tick_params(labelsize=14)
+    cbar.set_label("Mean Lifetime (a.u.)", fontsize=18)
+
+    # column tags, top-left of each column (A over the colour bar, B over the y label)
+    fig.canvas.draw()
+    to_fig = fig.transFigure.inverted()
+    y_tag = top.y1 + 0.005
+    x_a = to_fig.transform(cbar.ax.get_tightbbox().p0)[0]
+    x_b = to_fig.transform(ax[0, 1].get_tightbbox().p0)[0]
+    for x, tag in ((x_a, "A"), (x_b, "B")):
+        fig.text(x, y_tag, tag, fontsize=40, fontweight="bold", ha="left", va="bottom")
 
     return fig
 
@@ -935,12 +949,6 @@ if __name__ == "__main__":
             dfs.append(df)
 
         fig = makePlotMulti_tau(dfs)
-
-        fig.tight_layout()
-
-        # column tags: A = cluster snapshots, B = lifetime vs cluster size
-        fig.text(0.0, 1.0, "A", fontsize=40, fontweight="bold", va="bottom")
-        fig.text(0.665, 1.0, "B", fontsize=40, fontweight="bold", va="bottom")
 
         fig.savefig("../Figures/fig4.pdf", transparent=True, bbox_inches="tight")
         # fig.savefig('../Figures/fig4.png', dpi=300, transparent=True)
