@@ -853,6 +853,7 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
                 color=color,
                 fontsize=14,
                 fontweight="bold",
+                style="italic",
                 # white halo keeps the text readable over the points
                 path_effects=[mpl.patheffects.withStroke(linewidth=3, foreground="white")],
                 xycoords="axes fraction",
@@ -871,14 +872,14 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
         ax[row, 1].set_ylabel("Mean Lifetime (a.u.)", fontsize=18)
         ax[row, 1].set_xlabel("Cluster Size (#TF)", fontsize=18)
 
-    fig.tight_layout(rect=(0, 0.055, 1, 0.97))  # room for the colour bar and tags
+    fig.tight_layout(rect=(0, 0.075, 1, 0.97))  # room for the colour bar and tags
     for a in ax[:, 0]:
         drop_hidden_markers(a)  # smaller PDF, same picture
 
     # single horizontal colour bar under panel A, centred on the snapshot column
     top, bottom = ax[0, 0].get_position(), ax[-1, 0].get_position()
     width = 0.6 * bottom.width
-    cax = fig.add_axes([bottom.x0 + (bottom.width - width) / 2, 0.045, width, 0.012])
+    cax = fig.add_axes([bottom.x0 + (bottom.width - width) / 2, 0.04, width, 0.012])
     mappable = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
     cbar = fig.colorbar(mappable, cax=cax, orientation="horizontal", extend="both")
     cbar.set_ticks([t for t in (5, 10, 20, 50, 100, 200, 500) if norm.vmin <= t <= norm.vmax])
@@ -901,25 +902,19 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
         mpl.lines.Line2D([], [], color=color, marker="o", markersize=8, linewidth=3, label=label)
         for _, label, color in methods
     ]
-    # centred under panel B (axis + its y label); font shrinks until it fits
+    # one entry per line, centred under panel B (axis + its y label)
     col_b = ax[-1, 1].get_tightbbox().transformed(to_fig)
-    for fontsize in (13, 12, 11, 10):
-        legend = fig.legend(
-            handles=handles,
-            loc="center",
-            bbox_to_anchor=((col_b.x0 + col_b.x1) / 2, cax.get_position().y0 - 0.004),
-            borderaxespad=0,
-            ncol=3,
-            fontsize=fontsize,
-            columnspacing=0.9,
-            handlelength=1.5,
-            handletextpad=0.4,
-            frameon=False,
-        )
-        fig.canvas.draw()
-        if legend.get_window_extent().transformed(to_fig).width <= col_b.width:
-            break
-        legend.remove()
+    fig.legend(
+        handles=handles,
+        loc="center",
+        bbox_to_anchor=((col_b.x0 + col_b.x1) / 2, cax.get_position().y0 + 0.004),
+        borderaxespad=0,
+        ncol=1,
+        fontsize=14,
+        handlelength=1.8,
+        labelspacing=0.3,
+        frameon=False,
+    )
 
     return fig
 
