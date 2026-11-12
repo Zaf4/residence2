@@ -720,48 +720,62 @@ def stadium_outline(capsid: pd.DataFrame, n: int = 200) -> tuple[np.ndarray, np.
     return x, y
 
 
+# journal style for Fig. 4: drawn at print size (double column, 180 mm),
+# one sans-serif font, 7-9 pt text, thin lines
+FIG4_RC = {
+    "font.family": "sans-serif",
+    "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+    "font.size": 7,
+    "axes.labelsize": 8,
+    "axes.titlesize": 8,
+    "axes.linewidth": 0.6,
+    "xtick.labelsize": 7,
+    "ytick.labelsize": 7,
+    "xtick.major.size": 2.5,
+    "ytick.major.size": 2.5,
+    "xtick.major.width": 0.6,
+    "ytick.major.width": 0.6,
+    "xtick.minor.size": 0,
+    "ytick.minor.size": 0,
+    "legend.fontsize": 7,
+    "pdf.fonttype": 42,  # embed TrueType: text stays editable in the PDF
+    "svg.fonttype": "none",
+}
+FIG4_METHODS = [  # husl(3)
+    ("tau_old", "Exponential decay", "#f77189"),
+    ("tau_int", "Survival integral", "#50b131"),
+    ("tau_tail", "Tail-corrected integral", "#3ba3ec"),
+]
+
+
 def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Figure:
     """
-    Fig. 4 in a horizontal layout: one column per binding energy.
+    Fig. 4, one column per binding energy (2.8, 3.0, 3.5, 4.0 kT):
 
-    Row A: snapshot of the clusters in the capsid, coloured by mean lifetime
-           (one shared log colour scale, colour bar on the right).
-    Row B: mean lifetime vs cluster size for the three lifetime estimates
-           (one shared legend on the right).
+    A: snapshot of the clusters in the capsid, coloured by mean lifetime
+       (one shared log colour scale)
+    B: mean lifetime vs cluster size for the three lifetime estimates
 
     Parameters
     ----------
     dfs : list
-        list of dataframes, one per energy (2.8, 3.0, 3.5, 4.0 kT)
+        list of dataframes, one per energy
 
     Returns
     -------
     plt.Figure
         figure
     """
+    sns.set_theme(style="ticks", rc=FIG4_RC)
+    plt.rcParams.update(FIG4_RC)
 
-    # loading capsid df
-    capsid = pd.read_csv("./data/capsid2d.csv", index_col=None)
-    capsid_outline = stadium_outline(capsid)
-
-    # clear graph settings
-    sns.set_theme(
-        style="ticks",
-        rc={
-            "font.weight": "light",
-            "font.size": 21,
-            "font.family": "sans-serif",
-            "ytick.minor.size": "0",
-            "ytick.major.size": "6",
-            "xtick.major.size": "6",
-        },
-    )
-
-    n_cols = len(dfs)
-    fig, ax = plt.subplots(
-        2, n_cols, figsize=(5.2 * n_cols, 7.8), gridspec_kw={"height_ratios": [1.15, 2.1]}
-    )
+    capsid_outline = stadium_outline(pd.read_csv("./data/capsid2d.csv", index_col=None))
     kts = [2.80, 3.00, 3.50, 4.00]
+    n_cols = len(dfs)
+
+    fig, ax = plt.subplots(
+        2, n_cols, figsize=(7.2, 3.5), gridspec_kw={"height_ratios": [1, 2.3]}
+    )
 
     # one colour scale for the whole of row A; lifetimes span ~2 decades
     # across energies, so a log scale keeps the weak-binding columns readable
@@ -769,152 +783,115 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Figure:
     cmap = plt.get_cmap("Purples")
     norm = mpl.colors.LogNorm(all_tau[all_tau > 0].min(), all_tau.max())
 
-    # husl(3), as the seaborn figures
-    all_methods = [
-        ("tau_old", "Exponential Decay", "#f77189"),
-        ("tau_int", "Survival Integral", "#50b131"),
-        ("tau_tail", "Tail-Corrected Integral", "#3ba3ec"),
-    ]
-
     for col, df in enumerate(dfs):
         df = df[df.clusterID > 0]
         time = np.random.choice(df.timestep.unique())
-        N = len(np.unique(df.tau))
         snap, reg = ax[0, col], ax[1, col]
 
-        # -----------------SNAPSHOT (row A)------------------
-        # the capsid as one stadium outline instead of ~800 overlapping beads:
-        # identical shape, a single vector path in the PDF
-        snap.plot(*capsid_outline, color="#900C3F", linewidth=2.5, zorder=0)
-        sns.scatterplot(
-            data=df[df.timestep == time],
-            x="x",
-            y="y",
-            hue="tau",
-            palette=cmap,
-            hue_norm=norm,
-            edgecolor="#1f1f1f",
-            ax=snap,
-            s=22,
-            linewidth=0.2,
-            legend=False,
+        # ---------------- A: snapshot ----------------
+        # the capsid as one outline path instead of ~800 overlapping beads
+        snap.plot(*capsid_outline, color="#900C3F", linewidth=0.9, zorder=0)
+        frame = df[df.timestep == time]
+        snap.scatter(
+            frame.x,
+            frame.y,
+            c=frame.tau,
+            cmap=cmap,
+            norm=norm,
+            s=2.2,
+            edgecolors="#1f1f1f",
+            linewidths=0.1,
         )
-        snap.annotate(  # under the capsid, clear of the clusters
-            xy=(0.5, -0.02),
-            ha="center",
-            va="top",
-            fontsize=13,
-            text=f"t = {time}",
-            fontweight="light",
-            style="italic",
-            xycoords="axes fraction",
+        snap.set_title(f"{kts[col]:.1f} kT", fontweight="bold", pad=3)
+        snap.text(
+            0.5, -0.04, f"t = {time}", transform=snap.transAxes,
+            ha="center", va="top", fontsize=6, color="#555555", style="italic",
         )
-        snap.set_title(f"{kts[col]:.1f} kT", fontsize=22, fontweight="bold", pad=10)
         snap.set_xlim([-92, 92])
         snap.set_ylim([-31, 31])
-        snap.set_aspect("equal")  # true capsid shape
+        snap.set_aspect("equal")
         snap.set_axis_off()
 
-        # -----------------REGRESSION (row B)------------------
-        df_simple = simplify(df)
-
-        # overlay the three lifetime estimates; fall back to the single `tau`
-        # column for older CSVs that don't carry the per-method columns.
-        methods = [m for m in all_methods if m[0] in df_simple.columns]
-        if not methods:
-            methods = [("tau", "tau", "red")]
-
-        for j, (key, label, color) in enumerate(methods):
-            # drop failed single-exp fits (inf / non-positive) before plotting
-            m = df_simple[["clusterSize", key]].replace([np.inf, -np.inf], np.nan)
+        # ---------------- B: lifetime vs cluster size ----------------
+        simple = simplify(df)
+        notes = []
+        for key, label, color in FIG4_METHODS:
+            if key not in simple:
+                continue
+            # drop failed single-exp fits (inf / non-positive)
+            m = simple[["clusterSize", key]].replace([np.inf, -np.inf], np.nan)
             m = m[m[key] > 0].dropna()
             if len(m) < 2:
                 continue
-
             sns.regplot(
-                data=m,
-                x="clusterSize",
-                y=key,
-                ax=reg,
-                color=color,
-                label=label,
-                scatter_kws={"s": 30, "alpha": 0.7, "edgecolor": "white", "linewidths": 0.3},
-                line_kws={"linewidth": 3},
+                data=m, x="clusterSize", y=key, ax=reg, color=color, label=label,
+                scatter_kws={"s": 4, "alpha": 0.55, "linewidths": 0},
+                line_kws={"linewidth": 1.2},
             )
-
-            # pearson r + slope per method, stacked top-left
             r, _ = stats.pearsonr(m["clusterSize"], m[key])
             slope = np.polyfit(m["clusterSize"], m[key], 1)[0]
-            reg.annotate(
-                xy=(0.05, 0.91 - 0.08 * j),
-                text=f"r = {r:.2f}, m = {slope:.1f}",  # method given by colour
-                color=color,
-                fontsize=14,
-                fontweight="bold",
-                style="italic",
-                # white halo keeps the text readable over the points
-                path_effects=[mpl.patheffects.withStroke(linewidth=3, foreground="white")],
-                xycoords="axes fraction",
-            )
+            notes.append((f"r = {r:.2f}, m = {slope:.1f}", color))
 
-        # number of clusters
-        reg.annotate(
-            xy=(0.95, 0.05),
-            text=f"N = {N}",
-            ha="right",
-            fontsize=18,
-            fontweight="light",
-            style="italic",
-            xycoords="axes fraction",
+        # headroom above the data for the r/m notes, so they never cover points
+        lo, hi = reg.get_ylim()
+        reg.set_ylim(lo, hi + 0.38 * (hi - lo))
+        for j, (text, color) in enumerate(notes):
+            reg.text(
+                0.04, 0.97 - 0.085 * j, text, transform=reg.transAxes, ha="left", va="top",
+                color=color, fontsize=6.5, fontweight="bold", style="italic",
+            )
+        reg.text(
+            0.96, 0.04, f"N = {len(simple)}", transform=reg.transAxes,
+            ha="right", va="bottom", fontsize=6.5, style="italic",
         )
 
         sns.despine(ax=reg)
-        reg.tick_params(axis="both", labelsize=14)
-        reg.set_xlabel("Cluster Size (#TF)", fontsize=18)
-        reg.set_ylabel("Mean Lifetime (a.u.)" if col == 0 else "", fontsize=18)
+        reg.set_xlabel("")
+        reg.set_ylabel("Mean lifetime (a.u.)" if col == 0 else "")
+        reg.yaxis.set_major_locator(mpl.ticker.MaxNLocator(5))
+        reg.xaxis.set_major_locator(mpl.ticker.MaxNLocator(4))
 
-    # right margin holds the colour bar (row A) and the legend (row B)
-    fig.tight_layout(rect=(0.02, 0, 0.86, 1), h_pad=0.5, w_pad=1.5)
+    # shared x label, then room at the bottom for it and the legend
+    fig.tight_layout(rect=(0.025, 0.085, 0.93, 1), h_pad=0.4, w_pad=0.8)
     for a in ax[0]:
         drop_hidden_markers(a)  # smaller PDF, same picture
 
-    # single vertical colour bar for row A, right of the last snapshot
+    # slim colour bar for row A on the right
     row_a = ax[0, -1].get_position()
-    cax = fig.add_axes([0.875, row_a.y0, 0.01, row_a.height])
-    mappable = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
-    cbar = fig.colorbar(mappable, cax=cax, extend="both")
+    cax = fig.add_axes([0.935, row_a.y0 + 0.1 * row_a.height, 0.008, 0.8 * row_a.height])
+    cbar = fig.colorbar(plt.cm.ScalarMappable(cmap=cmap, norm=norm), cax=cax)
     cbar.set_ticks([t for t in (5, 20, 100, 500) if norm.vmin <= t <= norm.vmax])
     cbar.ax.yaxis.set_major_formatter(mpl.ticker.ScalarFormatter())
     cbar.ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-    cbar.ax.tick_params(labelsize=13)
-    cbar.set_label("Mean Lifetime\n(a.u.)", fontsize=15)
+    cbar.ax.tick_params(labelsize=6, length=2, width=0.5)
+    cbar.outline.set_linewidth(0.5)
+    cbar.set_label("Mean lifetime\n(a.u.)", fontsize=6.5, labelpad=3, linespacing=1.1)
 
-    # one legend for all of row B, one entry per line, right of the last plot
-    handles = [
-        mpl.lines.Line2D([], [], color=color, marker="o", markersize=8, linewidth=3, label=label)
-        for _, label, color in all_methods
-    ]
-    row_b = ax[1, -1].get_position()
-    fig.legend(
-        handles=handles,
-        loc="center left",
-        bbox_to_anchor=(0.865, row_b.y0 + row_b.height / 2),
-        borderaxespad=0,
-        ncol=1,
-        fontsize=14,
-        handlelength=1.8,
-        labelspacing=0.6,
-        frameon=False,
-    )
-
-    # row tags at the far left: A level with the energy headers, B with the plot tops
+    # shared x label right under the tick labels of row B
     fig.canvas.draw()
     to_fig = fig.transFigure.inverted()
-    x_tag = 0.0
+    ticks_bottom = min(
+        to_fig.transform(a.xaxis.get_tightbbox().p0)[1] for a in ax[1]
+    )
+    row_b_mid = (ax[1, 0].get_position().x0 + ax[1, -1].get_position().x1) / 2
+    fig.text(row_b_mid, ticks_bottom - 0.012, "Cluster size (number of TFs)",
+             ha="center", va="top", fontsize=8)
+
+    # one legend for row B, in a single row along the bottom
+    handles = [
+        mpl.lines.Line2D([], [], color=c, marker="o", markersize=3, linewidth=1.2, label=l)
+        for _, l, c in FIG4_METHODS
+    ]
+    fig.legend(
+        handles=handles, loc="lower center", bbox_to_anchor=(0.5, 0.0), ncol=3,
+        frameon=False, handlelength=1.6, columnspacing=1.8, borderaxespad=0.2,
+    )
+
+    # panel tags A and B, at the far left, level with the top of each row
     y_a = to_fig.transform(ax[0, 0].title.get_window_extent().p1)[1]
     y_b = ax[1, 0].get_position().y1
-    fig.text(x_tag, y_a, "A", fontsize=40, fontweight="bold", ha="left", va="top")
-    fig.text(x_tag, y_b, "B", fontsize=40, fontweight="bold", ha="left", va="top")
+    for y, tag in ((y_a, "A"), (y_b, "B")):
+        fig.text(0.0, y, tag, fontsize=11, fontweight="bold", ha="left", va="top")
 
     return fig
 
@@ -1016,7 +993,7 @@ if __name__ == "__main__":
 
         fig = makePlotMulti_tau(dfs)
 
-        fig.savefig("../Figures/fig4.pdf", transparent=True, bbox_inches="tight")
+        fig.savefig("../Figures/fig4.pdf", transparent=True, bbox_inches="tight", pad_inches=0.02)
         # fig.savefig('../Figures/fig4.png', dpi=300, transparent=True)
         # ax1 = makePlotMulti_surface(dfs)
         # plt.savefig('../SI_Figures/multi_surface.pdf',transparent=True)
