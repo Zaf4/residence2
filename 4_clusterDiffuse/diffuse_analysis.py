@@ -8,7 +8,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from scipy import stats
-from scipy.spatial import ConvexHull
+from scipy.spatial import ConvexHull, cKDTree
 from rich.progress import track
 
 
@@ -673,6 +673,52 @@ def simplify(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def drop_hidden_markers(ax: plt.Axes, n_rim: int = 48) -> None:
+    """Remove scatter markers that later-drawn markers cover completely.
+
+    They are invisible in the figure but still written to the PDF. Coverage is
+    tested in display space at the final marker size: a marker is dropped when
+    its centre and n_rim points on its rim all lie inside later markers. Call
+    after the final layout.
+    """
+    for coll in ax.collections:
+        if not isinstance(coll, mpl.collections.PathCollection) or len(coll.get_offsets()) < 2:
+            continue
+        xy = ax.transData.transform(coll.get_offsets())
+        size = coll.get_sizes()[0]  # points^2
+        lw = coll.get_linewidths()[0]
+        r = (np.sqrt(size) / 2 + lw / 2) * ax.figure.dpi / 72  # pixels
+        ang = np.linspace(0, 2 * np.pi, n_rim, endpoint=False)
+        ring = np.c_[np.cos(ang), np.sin(ang)] * r
+        tree = cKDTree(xy)
+        keep = np.ones(len(xy), bool)
+        for i, c in enumerate(xy):
+            for p in np.vstack([c, c + ring]):
+                if not any(j > i for j in tree.query_ball_point(p, 0.9 * r)):
+                    break
+            else:
+                keep[i] = False
+        coll.set_offsets(coll.get_offsets()[keep])
+        fc, ec = coll.get_facecolors(), coll.get_edgecolors()
+        if coll.get_array() is not None and len(coll.get_array()) == len(keep):
+            coll.set_array(coll.get_array()[keep])
+        if len(fc) == len(keep):
+            coll.set_facecolors(fc[keep])
+        if len(ec) == len(keep):
+            coll.set_edgecolors(ec[keep])
+
+
+def stadium_outline(capsid: pd.DataFrame, n: int = 200) -> tuple[np.ndarray, np.ndarray]:
+    """x, y of the capsid's 2D outline: two straight walls joined by semicircles."""
+    radius = capsid.y.abs().max()
+    half = capsid.x.abs().max() - radius  # half-length of the straight section
+    right = np.linspace(-np.pi / 2, np.pi / 2, n)  # bottom -> top
+    left = right + np.pi  # top -> bottom
+    x = np.r_[half + radius * np.cos(right), -half + radius * np.cos(left), half]
+    y = np.r_[radius * np.sin(right), radius * np.sin(left), -radius]
+    return x, y
+
+
 def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
     """
     takes multiple DataFrames and make multiple rows
@@ -691,6 +737,7 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
 
     # loading capsid df
     capsid = pd.read_csv("./data/capsid2d.csv", index_col=None)
+    capsid_outline = stadium_outline(capsid)
 
     # clear graph settings
     sns.set_theme(
@@ -728,16 +775,9 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
 
         kt = kts[row]
         # plotting the -----------------CAPSID------------------
-        sns.scatterplot(
-            data=capsid,
-            color="#8c8c8c",
-            ax=ax[row, 0],
-            x="x",
-            y="y",
-            edgecolor="none",
-            s=14,
-            legend=False,
-        )
+        # the capsid as one stadium outline instead of ~800 overlapping beads:
+        # identical shape, a single vector path in the PDF
+        ax[row, 0].plot(*capsid_outline, color="#8c8c8c", linewidth=3, zorder=0)
 
         # plotting the system -------------SCATTER-----------------------------------
         sns.scatterplot(
@@ -779,10 +819,11 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
 
         # overlay the three lifetime estimates; fall back to the single `tau`
         # column for older CSVs that don't carry the per-method columns.
+        # magma colours, as Fig. 2B
         methods = [
-            ("tau_old", "Exponential Decay", "red"),
-            ("tau_int", "Survival Integral", "tab:blue"),
-            ("tau_tail", "Tail-Corrected Integral", "green"),
+            ("tau_old", "Exponential Decay", "#f1605d"),
+            ("tau_int", "Survival Integral", "#721f81"),
+            ("tau_tail", "Tail-Corrected Integral", "#b73779"),
         ]
         methods = [m for m in methods if m[0] in df_simple.columns]
         if not methods:
@@ -833,6 +874,8 @@ def makePlotMulti_tau(dfs: list[pd.DataFrame], *args, **kwargs) -> plt.Axes:
         ax[row, 1].set_xlabel("Cluster Size (#TF)", fontsize=18)
 
     fig.tight_layout(rect=(0, 0.055, 1, 0.97))  # room for the colour bar and tags
+    for a in ax[:, 0]:
+        drop_hidden_markers(a)  # smaller PDF, same picture
 
     # single horizontal colour bar under panel A, centred on the snapshot column
     top, bottom = ax[0, 0].get_position(), ax[-1, 0].get_position()
