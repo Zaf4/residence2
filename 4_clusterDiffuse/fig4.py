@@ -113,7 +113,10 @@ def snapshot(df: pd.DataFrame, t: int, capsid: pl.DataFrame, fill_scale):
             legend_title_position="bottom",
             legend_title=element_text(size=17, hjust=0.5, color=INK),
             legend_text=element_text(size=14, color=INK),
-            legend_ticks=element_line(color=INK, size=0.6),
+            legend_ticks=element_line(color=INK, size=0.8),
+            # matplotlib: ticks outside the bar on the label side, outlined bar + caps
+            legend_ticks_length=[-6, 0],
+            legend_frame=element_rect(color=INK, size=0.8),
         )
     )
 
@@ -167,10 +170,11 @@ def main() -> None:
         breaks=[5, 10, 20, 50, 100, 200, 500],
         name="Mean Lifetime (a.u.)",
         guide=guide_colorbar(
-            barwidth=330,
-            barheight=12,
+            barwidth=425,
+            barheight=20,
             display="gradient",
             shape="triangle",  # matplotlib extend="both"
+            cap_size=21,  # matplotlib extendfrac: 5% of the bar length
             minor_ticks=True,
         ),
     )
