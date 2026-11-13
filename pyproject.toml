@@ -48,3 +48,8 @@ dependencies = [
 dev = [
     "ipykernel>=6.29.5",
 ]
+
+[tool.uv.sources]
+# Fig. 4 needs ggrust features newer than 0.8.1 (colorbar caps/frame, stat_poly_eq r/slope,
+# infinite positions, gggrid tag_level="unit"); switch back to PyPI once they are released.
+ggrust = { git = "https://github.com/datavil/ggrust", rev = "8458681f818b416f372f9d9f25dadc0486aa77de" }

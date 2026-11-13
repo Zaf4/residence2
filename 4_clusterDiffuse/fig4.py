@@ -6,9 +6,10 @@ B (right column): mean lifetime vs cluster size for three lifetime estimates
    (single-exponential fit, area under the survival curve, area + tail correction)
 
 Lifetimes are recomputed from ``data/fulls/*.full.npy`` with ``diffuse_analysis``.
-Same layout as the seaborn Fig. 4 in ``diffuse_analysis.py``, drawn with ggrust
-(needs ggrust with stat_poly_eq "R"/"slope", infinite positions, gggrid
-tag_level="unit" and the colorbar extend/minor ticks); writes Figures/legacy/.
+This is the script that produces Fig. 4 (``Figures/fig4.pdf`` / ``.png``). It needs
+ggrust newer than 0.8.1 (pinned to a git revision in ``pyproject.toml``). The earlier
+seaborn version, ``makePlotMulti_tau`` in ``diffuse_analysis.py``, now writes
+``Figures/legacy/fig4_seaborn.*``.
 """
 
 import os
@@ -194,9 +195,8 @@ def main() -> None:
     fig = gggrid([snapshots, regressions], ncol=2, widths=[1.6, 1], tag_levels="A") + ggsize(1400, 1560)
     fig += theme(plot_tag=element_text(size=34, face="bold", color=INK))
 
-    # alternative version; the primary Fig. 4 is the seaborn one (diffuse_analysis.py)
     for ext in ("pdf", "png"):
-        print(ggsave(fig, f"../Figures/legacy/fig4_ggrust.{ext}"))
+        print(ggsave(fig, f"../Figures/fig4.{ext}"))
 
 
 if __name__ == "__main__":

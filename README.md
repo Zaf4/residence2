@@ -37,7 +37,7 @@ Saved to Figures Folder
 
 **4_clusterDiffuse**
 
-* [Fig4](4_clusterDiffuse/diffuse_analysis.py)
+* [Fig4](4_clusterDiffuse/fig4.py) (ggrust; lifetimes recomputed with [diffuse_analysis.py](4_clusterDiffuse/diffuse_analysis.py), whose seaborn version goes to `Figures/legacy/fig4_seaborn.*`)
 * [Fig5CD](4_clusterDiffuse/surface_analysis.py)
 * [Fig5AB](4_clusterDiffuse/surface_visualize.py)
 
