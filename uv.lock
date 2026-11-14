@@ -285,10 +285,19 @@ wheels = [
 
 [[package]]
 name = "ggrust"
-version = "0.8.1"
-source = { git = "https://github.com/datavil/ggrust?rev=8458681f818b416f372f9d9f25dadc0486aa77de#8458681f818b416f372f9d9f25dadc0486aa77de" }
+version = "0.8.2"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "polars" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/00/90/91b52983453395a3a8bc7842be0e38aeff1cae384e721640bcc5f445268e/ggrust-0.8.2.tar.gz", hash = "sha256:af9194a5019a25f0d8fd6b8d42c7cb13898e189d9500b0f1cd628bec437e1fe3", size = 2880902, upload-time = "2026-11-14T05:55:04.769Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/15/6a/3a6dc0fef13d5d4c9a91e3c76ad6033b3304f13ba9cd4cf07fc3472d7867/ggrust-0.8.2-cp311-abi3-macosx_10_12_x86_64.whl", hash = "sha256:3023365f1d2aa8161210b74ae769e771bdfc29c58008c65d58213ec0ee066728", size = 9327336, upload-time = "2026-11-14T05:54:52.44Z" },
+    { url = "https://files.pythonhosted.org/packages/fe/2e/b0855cf94e343f20b72107e6ab3f91c9a1b75c162baebb3534ef9402a40d/ggrust-0.8.2-cp311-abi3-macosx_11_0_arm64.whl", hash = "sha256:3a6eca5539afb2207052c23e0221452c7fe2ed173477524f69de1d9201c1517e", size = 8879003, upload-time = "2026-11-14T05:54:54.634Z" },
+    { url = "https://files.pythonhosted.org/packages/cf/40/9292a59d456dd3e3a05860c77d4f5b3ec75eb2ba2f9803f9510782bef989/ggrust-0.8.2-cp311-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:a7c94d54eadb32327566fe7ef57c543cbe716c7110e4ce7bac4775810c84e0d9", size = 9246690, upload-time = "2026-11-14T05:54:56.55Z" },
+    { url = "https://files.pythonhosted.org/packages/f9/3e/2bd112ff8ce69e990f8df4fdcc0087d937ca3a1b7c2d79ca37e13277e010/ggrust-0.8.2-cp311-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:13815bb22ebf42bbb42d250b87d5b62330c619e56e7231af72ed94c498ff1b82", size = 9678801, upload-time = "2026-11-14T05:54:58.8Z" },
+    { url = "https://files.pythonhosted.org/packages/97/20/11a7c15fbd28072f0008574f148595473abda2f81d526d31f1694c88226d/ggrust-0.8.2-cp311-abi3-win_amd64.whl", hash = "sha256:6cb9334e273f93c061d81c7b032ccbd3062cb6b50866bd442c6301d999c90e91", size = 9709317, upload-time = "2026-11-14T05:55:00.734Z" },
+    { url = "https://files.pythonhosted.org/packages/82/9f/4fba1d861ad3b94ca3cd1c54c686faa2e8ba1262361834763cf1b4b821da/ggrust-0.8.2-cp311-abi3-win_arm64.whl", hash = "sha256:3d86a6b98d45dce93f27cd4ac08d9e612fd51831944bb98e3b95a034bdcf6607", size = 8942778, upload-time = "2026-11-14T05:55:02.882Z" },
 ]
 
 [[package]]
@@ -1191,7 +1200,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "cairosvg" },
-    { name = "ggrust", git = "https://github.com/datavil/ggrust?rev=8458681f818b416f372f9d9f25dadc0486aa77de" },
+    { name = "ggrust", specifier = ">=0.8.2" },
     { name = "lets-plot" },
     { name = "matplotlib", specifier = ">=3.6.0" },
     { name = "numpy", specifier = "==1.26.4" },
